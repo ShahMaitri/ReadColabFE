@@ -12,6 +12,7 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Stack, Typography } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 import { AnimatedBookLogo } from '../branding/AnimatedBookLogo';
+import { BrandHighlightText } from '../branding/BrandHighlightText';
 import { useAuth } from '../../hooks/useAuth';
 
 interface SidebarProps {
@@ -40,13 +41,15 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
 
   const drawerContent = (
     <Box sx={{ width: drawerWidth, height: '100%' }} role='presentation'>
-      <Box sx={{ px: 2.5, pt: 2.5, pb: 1.75 }}>
-        <Stack spacing={0.5} sx={{ alignItems: 'center', textAlign: 'center' }}>
+      <Box sx={{ px: 2.5, pt: 3.25, pb: 2.5 }}>
+        <Stack sx={{ alignItems: 'center', textAlign: 'center' }}>
           <AnimatedBookLogo badgeSize={52} bookWidth={44} bookHeight={34} durationSeconds={2.35} />
-          <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
-            Read Colab
+          <Typography variant='h6' sx={{ lineHeight: 1.1, mt: 1.5 }}>
+            <BrandHighlightText sx={{ fontSize: { xs: '1.3rem', md: '1.4rem' } }}>
+              Read Colab
+            </BrandHighlightText>
           </Typography>
-          <Typography variant='caption' color='text.secondary'>
+          <Typography variant='caption' color='text.secondary' sx={{ mt: 0.15 }}>
             Smart Office Library
           </Typography>
         </Stack>

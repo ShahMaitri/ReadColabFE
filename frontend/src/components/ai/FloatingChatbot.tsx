@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import axios from 'axios';
 import {
   Alert,
   Box,
@@ -35,6 +36,7 @@ export const FloatingChatbot = () => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
+  const [chatError, setChatError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const chatMutation = useAIChat();
 
@@ -48,6 +50,9 @@ export const FloatingChatbot = () => {
     if (!trimmed || chatMutation.isPending) {
       return;
     }
+
+    chatMutation.reset();
+    setChatError(null);
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -68,7 +73,21 @@ export const FloatingChatbot = () => {
         content: String(responseText || 'I could not generate a response right now.')
       };
       setMessages((prev) => [...prev, assistantMessage].slice(-MAX_MESSAGES));
-    } catch {
+    } catch (error: any) {
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+      const apiMessage = axios.isAxiosError(error)
+        ? String((error.response?.data as any)?.message || '')
+        : String(error?.message || '');
+
+      let alertMessage = 'Unable to reach the assistant right now. Please try again shortly.';
+      if (status === 401) {
+        alertMessage = 'Your session has expired. Please sign in again to use the chatbot.';
+      } else if (status === 429 || /rate\s*limit|too\s*many\s*requests|\b429\b/i.test(apiMessage)) {
+        alertMessage = 'AI provider is temporarily rate-limited. Please retry in a moment.';
+      }
+
+      setChatError(alertMessage);
+
       const errorMessage: ChatMessage = {
         id: `assistant-error-${Date.now()}`,
         role: 'assistant',
@@ -114,8 +133,8 @@ export const FloatingChatbot = () => {
               px: 1.75,
               py: 1.25,
               background: theme.palette.mode === 'dark'
-                ? 'linear-gradient(120deg, rgba(43,112,111,0.92) 0%, rgba(21,33,45,0.94) 100%)'
-                : 'linear-gradient(120deg, rgba(11,110,109,0.96) 0%, rgba(37,70,100,0.94) 100%)',
+                ? 'linear-gradient(120deg, rgba(192,104,255,0.94) 0%, rgba(39,39,58,0.96) 100%)'
+                : 'linear-gradient(120deg, rgba(161,0,255,0.96) 0%, rgba(127,29,255,0.94) 100%)',
               color: 'common.white'
             }}
           >
@@ -171,9 +190,9 @@ export const FloatingChatbot = () => {
           </Box>
 
           <Box sx={{ p: 1.2, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
-            {chatMutation.isError && (
+            {chatError && (
               <Alert severity='warning' sx={{ mb: 1 }}>
-                Could not connect to chatbot API.
+                {chatError}
               </Alert>
             )}
             <Stack direction='row' spacing={1}>
@@ -211,13 +230,17 @@ export const FloatingChatbot = () => {
             right: { xs: 12, sm: 20 },
             bottom: { xs: 16, sm: 20 },
             zIndex: (muiTheme) => muiTheme.zIndex.modal + 3,
-            boxShadow: '0 12px 28px rgba(11,110,109,0.35)',
+            boxShadow: theme.palette.mode === 'dark'
+              ? '0 12px 28px rgba(192,104,255,0.42)'
+              : '0 12px 28px rgba(161,0,255,0.36)',
             '&::after': {
               content: '""',
               position: 'absolute',
               inset: -7,
               borderRadius: '50%',
-              border: '2px solid rgba(11,110,109,0.28)',
+              border: theme.palette.mode === 'dark'
+                ? '2px solid rgba(192,104,255,0.35)'
+                : '2px solid rgba(161,0,255,0.28)',
               animation: 'chatPulse 1900ms ease-out infinite'
             },
             '@keyframes chatPulse': {

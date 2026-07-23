@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 import { apiClient } from '../api/axios';
 
 // Types
@@ -66,8 +67,30 @@ export function useAIProvider() {
 export function useAIChat() {
   return useMutation({
     mutationFn: async (request: ChatRequest) => {
-      const response = await apiClient.post('/ai/chat', request);
-      return response.data.data.response;
+      try {
+        const response = await apiClient.post('/ai/chat', request);
+        return response.data.data.response;
+      } catch (error: any) {
+        const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+        const apiMessage = axios.isAxiosError(error)
+          ? String((error.response?.data as any)?.message || '')
+          : String(error?.message || '');
+
+        const isRateLimited =
+          status === 429 ||
+          /rate\s*limit|too\s*many\s*requests|\b429\b/i.test(apiMessage);
+
+        if (isRateLimited) {
+          return 'I am currently rate-limited by the AI provider. Please try again in a while. Meanwhile, I can still help with library navigation and general guidance.';
+        }
+
+        // Treat transient upstream/backend failures as graceful chatbot fallback.
+        if (typeof status === 'number' && status >= 500) {
+          return 'The assistant is temporarily unavailable due to a server-side issue. Please try again shortly.';
+        }
+
+        throw error;
+      }
     }
   });
 }

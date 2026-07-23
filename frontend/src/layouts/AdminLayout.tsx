@@ -125,8 +125,8 @@ export const AdminLayout = () => {
         bgcolor: 'background.default',
         backgroundImage:
           theme.palette.mode === 'dark'
-            ? 'radial-gradient(1200px 520px at 100% -10%, rgba(118,210,207,0.10), transparent 40%), radial-gradient(900px 420px at 0% 100%, rgba(154,182,218,0.08), transparent 35%)'
-            : 'radial-gradient(1200px 520px at 100% -10%, rgba(11,110,109,0.10), transparent 40%), radial-gradient(900px 420px at 0% 100%, rgba(59,83,112,0.08), transparent 35%)'
+            ? 'radial-gradient(1200px 520px at 100% -10%, rgba(192,104,255,0.12), transparent 40%), radial-gradient(900px 420px at 0% 100%, rgba(120,162,255,0.10), transparent 35%)'
+            : 'radial-gradient(1200px 520px at 100% -10%, rgba(161,0,255,0.12), transparent 40%), radial-gradient(900px 420px at 0% 100%, rgba(63,103,234,0.10), transparent 35%)'
       }}
     >
       {/* AppBar */}

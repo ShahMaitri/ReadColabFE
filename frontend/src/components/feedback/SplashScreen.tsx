@@ -1,5 +1,6 @@
 import { Box, LinearProgress, Paper, Stack, Typography } from '@mui/material';
 import { AnimatedBookLogo } from '../branding/AnimatedBookLogo';
+import { BrandHighlightText } from '../branding/BrandHighlightText';
 
 export const SplashScreen = () => {
   return (
@@ -9,8 +10,8 @@ export const SplashScreen = () => {
         display: 'grid',
         placeItems: 'center',
         background: (theme) => theme.palette.mode === 'dark'
-          ? 'radial-gradient(1200px 600px at 10% 10%, rgba(118,210,207,0.16), transparent 45%), radial-gradient(1000px 500px at 90% 90%, rgba(154,182,218,0.18), transparent 45%), #0f131a'
-          : 'radial-gradient(1200px 600px at 10% 10%, rgba(11,110,109,0.18), transparent 45%), radial-gradient(1000px 500px at 90% 90%, rgba(59,83,112,0.12), transparent 45%), #f5f7fb'
+          ? 'radial-gradient(1200px 600px at 10% 10%, rgba(192,104,255,0.18), transparent 45%), radial-gradient(1000px 500px at 90% 90%, rgba(120,162,255,0.16), transparent 45%), #0b0b10'
+          : 'radial-gradient(1200px 600px at 10% 10%, rgba(161,0,255,0.18), transparent 45%), radial-gradient(1000px 500px at 90% 90%, rgba(63,103,234,0.12), transparent 45%), #f6f6f9'
       }}
     >
       <Paper
@@ -31,9 +32,11 @@ export const SplashScreen = () => {
           </Box>
 
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant='h5'>Smart Office Library</Typography>
+            <Typography variant='h5'>
+              <BrandHighlightText animate>Read Colab</BrandHighlightText>
+            </Typography>
             <Typography variant='body2' color='text.secondary'>
-              Enterprise reading workspace for modern teams
+              Enterprise reading workspace - Smart Office Library
             </Typography>
           </Box>
 

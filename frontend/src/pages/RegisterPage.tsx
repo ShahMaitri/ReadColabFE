@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/auth.service';
 import { useState } from 'react';
 import { AnimatedBookLogo } from '../components/branding/AnimatedBookLogo';
+import { BrandHighlightText } from '../components/branding/BrandHighlightText';
 
 const registerSchema = z
   .object({
@@ -60,8 +61,8 @@ export const RegisterPage = () => {
         placeItems: 'center',
         p: 2,
         background: (theme) => theme.palette.mode === 'dark'
-          ? 'radial-gradient(900px 420px at 15% 15%, rgba(118,210,207,0.16), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(154,182,218,0.16), transparent 48%), #0f131a'
-          : 'radial-gradient(900px 420px at 15% 15%, rgba(11,110,109,0.20), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(59,83,112,0.14), transparent 48%), #f5f7fb'
+          ? 'radial-gradient(900px 420px at 15% 15%, rgba(192,104,255,0.16), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(120,162,255,0.16), transparent 48%), #0b0b10'
+          : 'radial-gradient(900px 420px at 15% 15%, rgba(161,0,255,0.20), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(63,103,234,0.14), transparent 48%), #f6f6f9'
       }}
     >
       <Card sx={{ width: '100%', maxWidth: 440, borderRadius: 5 }}>
@@ -73,7 +74,11 @@ export const RegisterPage = () => {
                 Create Account
               </Typography>
               <Typography variant='body2' color='text.secondary' sx={{ textAlign: 'center' }}>
-                Join Smart Office Library
+                Join{' '}
+                <BrandHighlightText>
+                  Read Colab
+                </BrandHighlightText>{' '}
+                - Smart Office Library
               </Typography>
             </Stack>
           {error && (

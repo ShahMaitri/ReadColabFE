@@ -3,25 +3,29 @@ import { createTheme } from '@mui/material/styles';
 export type AppResolvedThemeMode = 'light' | 'dark';
 
 const lightPalette = {
-  primary: '#0b6e6d',
-  secondary: '#3b5370',
-  success: '#2e7d32',
-  warning: '#ed6c02',
-  info: '#0288d1',
-  error: '#d32f2f',
-  background: '#f5f7fb',
-  surface: '#ffffff'
+  primary: '#a100ff',
+  secondary: '#2d2b38',
+  success: '#1e915f',
+  warning: '#f28a1d',
+  info: '#3f67ea',
+  error: '#d9382b',
+  background: '#f6f6f9',
+  surface: '#ffffff',
+  textPrimary: '#101014',
+  textSecondary: '#4c4c5c'
 };
 
 const darkPalette = {
-  primary: '#76d2cf',
-  secondary: '#9ab6da',
-  success: '#7ed882',
-  warning: '#ffb870',
-  info: '#6cc8ff',
-  error: '#ff9ea3',
-  background: '#0f131a',
-  surface: '#171d28'
+  primary: '#c068ff',
+  secondary: '#d7d3e8',
+  success: '#59c78a',
+  warning: '#ffb347',
+  info: '#78a2ff',
+  error: '#ff8c80',
+  background: '#0b0b10',
+  surface: '#15151d',
+  textPrimary: '#f7f6fb',
+  textSecondary: '#b9b4cd'
 };
 
 export const createAppTheme = (mode: AppResolvedThemeMode) => {
@@ -36,34 +40,55 @@ export const createAppTheme = (mode: AppResolvedThemeMode) => {
       warning: { main: token.warning },
       info: { main: token.info },
       error: { main: token.error },
+      text: {
+        primary: token.textPrimary,
+        secondary: token.textSecondary
+      },
       background: {
         default: token.background,
         paper: token.surface
       }
     },
     shape: {
-      borderRadius: 16
+      borderRadius: 14
     },
     typography: {
-      fontFamily: ['Poppins', 'Segoe UI', 'Arial', 'sans-serif'].join(', '),
-      h4: { fontWeight: 700, letterSpacing: '-0.01em' },
-      h5: { fontWeight: 700, letterSpacing: '-0.01em' },
-      h6: { fontWeight: 700, letterSpacing: '-0.01em' },
+      fontFamily: ['Source Sans 3', 'Segoe UI', 'Arial', 'sans-serif'].join(', '),
+      h4: { fontFamily: 'Montserrat, Segoe UI, Arial, sans-serif', fontWeight: 700, letterSpacing: '-0.01em' },
+      h5: { fontFamily: 'Montserrat, Segoe UI, Arial, sans-serif', fontWeight: 700, letterSpacing: '-0.01em' },
+      h6: { fontFamily: 'Montserrat, Segoe UI, Arial, sans-serif', fontWeight: 700, letterSpacing: '-0.01em' },
       body1: { lineHeight: 1.6 },
       body2: { lineHeight: 1.55 }
     },
     components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          body: {
+            backgroundImage:
+              mode === 'dark'
+                ? 'radial-gradient(1200px 600px at -10% -10%, rgba(192,104,255,0.12), transparent 45%), radial-gradient(1000px 500px at 110% 110%, rgba(120,162,255,0.08), transparent 45%)'
+                : 'radial-gradient(1200px 600px at -10% -10%, rgba(161,0,255,0.10), transparent 45%), radial-gradient(1000px 500px at 110% 110%, rgba(63,103,234,0.08), transparent 45%)'
+          }
+        }
+      },
       MuiCard: {
         defaultProps: {
           elevation: 0
         },
         styleOverrides: {
           root: {
-            borderRadius: 20,
-            border: `1px solid ${mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)'}`,
+            borderRadius: 16,
+            border: `1px solid ${mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(16,16,20,0.08)'}`,
             boxShadow: mode === 'dark'
-              ? '0 8px 24px rgba(0,0,0,0.28)'
-              : '0 8px 24px rgba(15,23,42,0.07)'
+              ? '0 10px 28px rgba(0,0,0,0.35)'
+              : '0 10px 28px rgba(16,16,20,0.08)'
+          }
+        }
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            backgroundImage: 'none'
           }
         }
       },
@@ -71,9 +96,20 @@ export const createAppTheme = (mode: AppResolvedThemeMode) => {
         styleOverrides: {
           root: {
             textTransform: 'none',
-            borderRadius: 12,
+            borderRadius: 10,
             fontWeight: 600,
             paddingInline: 16
+          },
+          contained: {
+            background: mode === 'dark'
+              ? 'linear-gradient(120deg, #c068ff 0%, #9f39ff 100%)'
+              : 'linear-gradient(120deg, #a100ff 0%, #7f1dff 100%)',
+            boxShadow: mode === 'dark'
+              ? '0 8px 20px rgba(160, 64, 255, 0.42)'
+              : '0 8px 20px rgba(161, 0, 255, 0.28)',
+            '&:hover': {
+              filter: 'brightness(1.04)'
+            }
           }
         }
       },
@@ -87,7 +123,7 @@ export const createAppTheme = (mode: AppResolvedThemeMode) => {
       MuiChip: {
         styleOverrides: {
           root: {
-            borderRadius: 10
+            borderRadius: 8
           }
         }
       },
@@ -96,15 +132,23 @@ export const createAppTheme = (mode: AppResolvedThemeMode) => {
           size: 'small'
         }
       },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            borderRadius: 10,
+            backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.88)'
+          }
+        }
+      },
       MuiTableCell: {
         styleOverrides: {
           head: {
             backgroundColor:
-              mode === 'dark' ? 'rgba(118, 210, 207, 0.22)' : 'rgba(11, 110, 109, 0.12)',
-            color: mode === 'dark' ? '#e7f6f5' : 'rgba(15, 23, 42, 0.92)',
+              mode === 'dark' ? 'rgba(192,104,255,0.26)' : 'rgba(161,0,255,0.12)',
+            color: mode === 'dark' ? '#f7f1ff' : 'rgba(16,16,20,0.92)',
             fontWeight: 700,
             borderBottom:
-              mode === 'dark' ? '1px solid rgba(255,255,255,0.16)' : '1px solid rgba(15,23,42,0.12)',
+              mode === 'dark' ? '1px solid rgba(255,255,255,0.14)' : '1px solid rgba(16,16,20,0.12)',
             '&:first-of-type': {
               paddingLeft: 20
             },
@@ -117,13 +161,26 @@ export const createAppTheme = (mode: AppResolvedThemeMode) => {
       MuiTable: {
         defaultProps: {
           size: 'small'
+        },
+        styleOverrides: {
+          root: {
+            width: 'max-content',
+            minWidth: '100%'
+          }
         }
       },
       MuiTableContainer: {
         styleOverrides: {
           root: {
             borderRadius: 12,
-            overflow: 'hidden'
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            '@media (max-width:900px)': {
+              '& .MuiTableCell-root': {
+                whiteSpace: 'nowrap'
+              }
+            }
           }
         }
       }

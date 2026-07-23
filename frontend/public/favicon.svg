@@ -1,8 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <path d="M8 12c8-3 16-2 24 2v38c-8-4-16-5-24-2V12z" fill="#ffffff" stroke="#0b6e6d" stroke-width="1.6"/>
-  <path d="M56 12c-8-3-16-2-24 2v38c8-4 16-5 24-2V12z" fill="#e6f2f2" stroke="#0b6e6d" stroke-width="1.6"/>
-  <rect x="31" y="12" width="2" height="38" rx="1" fill="#0b6e6d"/>
-  <path d="M13 20h12M13 25h14M13 30h11M13 35h13M13 40h10" stroke="#6fb8b6" stroke-width="1.7" stroke-linecap="round"/>
-  <path d="M37 20h12M37 25h10M37 30h13M37 35h9M37 40h11" stroke="#74bebe" stroke-width="1.7" stroke-linecap="round"/>
-  <rect x="2.5" y="2.5" width="59" height="59" rx="13.5" stroke="#0b6e6d" stroke-width="3"/>
+  <defs>
+    <linearGradient id="bg" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a100ff"/>
+      <stop offset="1" stop-color="#7f1dff"/>
+    </linearGradient>
+    <linearGradient id="page" x1="12" y1="14" x2="52" y2="50" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#f1e9ff"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="3" y="3" width="58" height="58" rx="14" fill="url(#bg)"/>
+  <rect x="3" y="3" width="58" height="58" rx="14" stroke="#f6e8ff" stroke-opacity="0.72" stroke-width="2.4"/>
+
+  <path d="M10.5 13.5c7.2-2.7 14.5-1.8 21.5 2v34.8c-7.2-3.6-14.6-4.4-21.5-1.9V13.5z" fill="url(#page)" stroke="#f5e6ff" stroke-width="1.5"/>
+  <path d="M53.5 13.5c-7.2-2.7-14.5-1.8-21.5 2v34.8c7.2-3.6 14.6-4.4 21.5-1.9V13.5z" fill="url(#page)" stroke="#f5e6ff" stroke-width="1.5"/>
+  <rect x="31" y="14" width="2" height="36" rx="1" fill="#5f11bf"/>
+
+  <path d="M15 21h12M15 26h13M15 31h10M15 36h12M15 41h9" stroke="#b06cff" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M37 21h12M37 26h10M37 31h13M37 36h9M37 41h11" stroke="#a55dff" stroke-width="1.6" stroke-linecap="round"/>
 </svg>

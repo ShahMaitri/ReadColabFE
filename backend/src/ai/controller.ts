@@ -6,6 +6,11 @@ import { AppError } from '../utils/appError';
 export class AIController {
   constructor(private aiService: AIService) {}
 
+  private isRateLimitError(error: unknown): boolean {
+    const message = String((error as { message?: unknown })?.message || error || '').toLowerCase();
+    return message.includes('429') || message.includes('too many requests') || message.includes('rate limit');
+  }
+
   /**
    * Chat with AI assistant
    * POST /ai/chat
@@ -22,7 +27,17 @@ export class AIController {
       throw new AppError('At least one message is required', 400);
     }
 
-    const response = await this.aiService.chat(messages);
+    let response: string;
+
+    try {
+      response = await this.aiService.chat(messages);
+    } catch (error) {
+      if (!this.isRateLimitError(error)) {
+        throw error;
+      }
+
+      response = 'I am temporarily rate-limited by the AI provider. Please try again in a little while. I can still help with basic library guidance in the meantime.';
+    }
 
     res.status(200).json({
       success: true,

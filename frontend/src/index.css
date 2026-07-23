@@ -1,5 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+
 * {
   box-sizing: border-box;
+}
+
+:root {
+  --accent-magenta: #a100ff;
+  --accent-violet: #7f1dff;
 }
 
 html,
@@ -10,11 +17,12 @@ body,
 }
 
 body {
+  font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
   transition: background-color 220ms ease, color 220ms ease;
 }
 
 ::selection {
-  background: rgba(11, 110, 109, 0.25);
+  background: rgba(161, 0, 255, 0.24);
 }
 
 @keyframes splashFade {
