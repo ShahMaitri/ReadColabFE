@@ -139,6 +139,37 @@ export const getOverdueStats = asyncHandler(async (req: Request, res: Response) 
   });
 });
 
+export const getGlobalWishlistCount = asyncHandler(async (_req: Request, res: Response) => {
+  const stats = await analyticsService.getGlobalWishlistCount();
+
+  res.json({
+    success: true,
+    message: 'Global wishlist count retrieved',
+    data: stats
+  });
+});
+
+export const getGlobalDueSoonBorrows = asyncHandler(async (req: Request, res: Response) => {
+  const days = parseInt(req.query.days as string) || 7;
+  const borrows = await analyticsService.getGlobalDueSoonBorrows(days);
+
+  res.json({
+    success: true,
+    message: 'Global due soon borrows retrieved',
+    data: borrows
+  });
+});
+
+export const getGlobalReadingStatistics = asyncHandler(async (_req: Request, res: Response) => {
+  const stats = await analyticsService.getGlobalReadingStatistics();
+
+  res.json({
+    success: true,
+    message: 'Global reading statistics retrieved',
+    data: stats
+  });
+});
+
 export const getComprehensiveDashboard = asyncHandler(async (req: Request, res: Response) => {
   const dashboard = await analyticsService.getComprehensiveDashboard();
 
@@ -279,6 +310,8 @@ export default {
   getBooksByCategory,
   getCategoryBorrowStats,
   getOverdueStats,
+  getGlobalWishlistCount,
+  getGlobalDueSoonBorrows,
   getComprehensiveDashboard,
   getUserStatistics,
   getTrendingBooks,

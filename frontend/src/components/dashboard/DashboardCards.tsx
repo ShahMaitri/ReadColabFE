@@ -4,7 +4,6 @@ import {
   CardHeader,
   Typography,
   Box,
-  Grid,
   Chip,
   CircularProgress,
   List,
@@ -38,6 +37,14 @@ import {
   useRecommendedBooks
 } from '../../hooks/useDashboard';
 import { useState } from 'react';
+import { useAuth } from '../../hooks/useAuth';
+import {
+  useBorrowStatusDistribution,
+  useDashboardStats,
+  useGlobalDueSoonBorrows,
+  useGlobalReadingStatistics,
+  useGlobalWishlistCount
+} from '../../hooks/useAnalytics';
 
 export const BooksAvailableCard = () => {
   const { data: books = [], isLoading } = useAvailableBooks();
@@ -70,18 +77,25 @@ export const BooksAvailableCard = () => {
 };
 
 export const BooksBorrowedCard = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const { data: borrows = [], isLoading } = useUserBorrows();
-  const borrowedCount = borrows.filter(b => b.status === 'BORROWED').length;
+  const { data: dashboardStats, isLoading: statsLoading } = useDashboardStats();
+
+  const borrowedCount = isAdmin
+    ? (dashboardStats?.totalBorrows ?? 0)
+    : borrows.filter((b) => b.status === 'BORROWED').length;
+  const loading = isAdmin ? statsLoading : isLoading;
 
   return (
     <Card sx={{ height: '100%' }}>
       <CardHeader
         avatar={<LocalLibrary sx={{ color: 'warning.main' }} />}
         title="Books Borrowed"
-        subheader="Your Current Borrows"
+        subheader={isAdmin ? 'Total borrows by all users' : 'Your Current Borrows'}
       />
       <CardContent>
-        {isLoading ? (
+        {loading ? (
           <CircularProgress />
         ) : (
           <Box>
@@ -89,7 +103,7 @@ export const BooksBorrowedCard = () => {
               {borrowedCount}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Currently borrowed by you
+              {isAdmin ? 'Borrow records across all users' : 'Currently borrowed by you'}
             </Typography>
           </Box>
         )}
@@ -99,18 +113,25 @@ export const BooksBorrowedCard = () => {
 };
 
 export const OpenRequestsCard = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const { data: borrows = [], isLoading } = useUserBorrows();
-  const openRequestsCount = borrows.filter((borrow) => borrow.status === 'PENDING').length;
+  const { data: borrowStatusDist = [], isLoading: statusDistLoading } = useBorrowStatusDistribution();
+
+  const openRequestsCount = isAdmin
+    ? (borrowStatusDist.find((item: any) => item.status === 'PENDING')?.count ?? 0)
+    : borrows.filter((borrow) => borrow.status === 'PENDING').length;
+  const loading = isAdmin ? statusDistLoading : isLoading;
 
   return (
     <Card sx={{ height: '100%' }}>
       <CardHeader
         avatar={<Schedule sx={{ color: 'warning.main' }} />}
         title="Borrow Requests"
-        subheader="Your pending borrow requests"
+        subheader={isAdmin ? 'Pending requests from all users' : 'Your pending borrow requests'}
       />
       <CardContent>
-        {isLoading ? (
+        {loading ? (
           <CircularProgress />
         ) : (
           <Box>
@@ -118,7 +139,7 @@ export const OpenRequestsCard = () => {
               {openRequestsCount}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Awaiting admin approval
+              {isAdmin ? 'Requests awaiting admin approval' : 'Awaiting admin approval'}
             </Typography>
           </Box>
         )}
@@ -128,31 +149,36 @@ export const OpenRequestsCard = () => {
 };
 
 export const DueSoonCard = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const { data: dueSoon = [], isLoading } = useDueSoonBooks();
+  const { data: globalDueSoon = [], isLoading: globalDueSoonLoading } = useGlobalDueSoonBorrows(7);
+  const data = isAdmin ? globalDueSoon : dueSoon;
+  const loading = isAdmin ? globalDueSoonLoading : isLoading;
 
   return (
     <Card sx={{ height: '100%' }}>
       <CardHeader
         avatar={<Schedule sx={{ color: 'error.main' }} />}
         title="Due Soon"
-        subheader="Books due in 7 days"
+        subheader={isAdmin ? 'All users: books due in 7 days' : 'Books due in 7 days'}
       />
       <CardContent>
-        {isLoading ? (
+        {loading ? (
           <CircularProgress />
-        ) : dueSoon.length > 0 ? (
+        ) : data.length > 0 ? (
           <Box>
             <Typography variant="h4" sx={{ color: 'error.main', fontWeight: 'bold' }}>
-              {dueSoon.length}
+              {data.length}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Books to return soon
+              {isAdmin ? 'Borrowed books due soon across users' : 'Books to return soon'}
             </Typography>
             <List sx={{ mt: 1 }}>
-              {dueSoon.slice(0, 3).map((book, idx) => (
+              {data.slice(0, 3).map((book, idx) => (
                 <ListItem key={idx} sx={{ py: 0.5 }}>
                   <ListItemText
-                    primary={<Typography variant="caption">{book.book?.title}</Typography>}
+                    primary={<Typography variant="caption">{book.book?.title || 'Unknown book'}</Typography>}
                     secondary={<Typography variant="caption">Due: {new Date(book.dueDate).toLocaleDateString()}</Typography>}
                   />
                 </ListItem>
@@ -380,68 +406,71 @@ export const TrendingBooksCard = () => {
 };
 
 export const ReadingStatisticsCard = () => {
-  const { data: stats, isLoading } = useReadingStatistics();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const { data: userStats, isLoading: userStatsLoading } = useReadingStatistics();
+  const { data: globalStats, isLoading: globalStatsLoading } = useGlobalReadingStatistics();
+  const stats = isAdmin ? globalStats : userStats;
+  const isLoading = isAdmin ? globalStatsLoading : userStatsLoading;
 
   return (
     <Card sx={{ height: '100%' }}>
       <CardHeader
         title="Reading Statistics"
-        subheader="Your activity overview"
+        subheader={isAdmin ? 'All users activity overview' : 'Your activity overview'}
       />
       <CardContent>
         {isLoading ? (
           <CircularProgress />
         ) : (
-          <Grid container spacing={2}>
-            <Grid item xs={6} sm={4}>
-              <Box sx={{ textAlign: 'center' }}>
+          <Box
+            sx={{
+              width: '100%',
+              display: 'grid',
+              gap: 1.25,
+              gridTemplateColumns: {
+                xs: 'repeat(2, minmax(0, 1fr))',
+                md: 'repeat(6, minmax(0, 1fr))'
+              }
+            }}
+          >
+            <Box sx={{ textAlign: 'center', width: '100%', py: 1.25, borderRadius: 1.5, bgcolor: 'action.hover' }}>
                 <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
                   {stats?.totalBorrowed || 0}
                 </Typography>
                 <Typography variant="caption">Borrowed</Typography>
               </Box>
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: 'center', width: '100%', py: 1.25, borderRadius: 1.5, bgcolor: 'action.hover' }}>
                 <Typography variant="h6" sx={{ color: 'success.main', fontWeight: 'bold' }}>
                   {stats?.totalReturned || 0}
                 </Typography>
                 <Typography variant="caption">Returned</Typography>
               </Box>
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: 'center', width: '100%', py: 1.25, borderRadius: 1.5, bgcolor: 'action.hover' }}>
                 <Typography variant="h6" sx={{ color: 'error.main', fontWeight: 'bold' }}>
                   {stats?.totalOverdue || 0}
                 </Typography>
                 <Typography variant="caption">Overdue</Typography>
               </Box>
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: 'center', width: '100%', py: 1.25, borderRadius: 1.5, bgcolor: 'action.hover' }}>
                 <Typography variant="h6" sx={{ color: 'warning.main', fontWeight: 'bold' }}>
                   {stats?.booksWishlisted || 0}
                 </Typography>
                 <Typography variant="caption">Wishlisted</Typography>
               </Box>
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: 'center', width: '100%', py: 1.25, borderRadius: 1.5, bgcolor: 'action.hover' }}>
                 <Typography variant="h6" sx={{ color: 'info.main', fontWeight: 'bold' }}>
                   {stats?.booksReviewed || 0}
                 </Typography>
                 <Typography variant="caption">Reviewed</Typography>
               </Box>
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: 'center', width: '100%', py: 1.25, borderRadius: 1.5, bgcolor: 'action.hover' }}>
                 <Typography variant="h6" sx={{ color: 'secondary.main', fontWeight: 'bold' }}>
                   {(stats?.averageRating || 0).toFixed(1)}★
                 </Typography>
                 <Typography variant="caption">Avg Rating</Typography>
               </Box>
-            </Grid>
-          </Grid>
+          </Box>
         )}
       </CardContent>
     </Card>
@@ -449,18 +478,22 @@ export const ReadingStatisticsCard = () => {
 };
 
 export const WishlistCard = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const { data: stats, isLoading } = useReadingStatistics();
-  const wishlistCount = stats?.booksWishlisted || 0;
+  const { data: globalWishlist, isLoading: globalWishlistLoading } = useGlobalWishlistCount();
+  const wishlistCount = isAdmin ? (globalWishlist?.totalWishlisted || 0) : (stats?.booksWishlisted || 0);
+  const loading = isAdmin ? globalWishlistLoading : isLoading;
 
   return (
     <Card sx={{ height: '100%' }}>
       <CardHeader
         avatar={<Favorite sx={{ color: 'error.main' }} />}
         title="Wishlist"
-        subheader="Books you want to read"
+        subheader={isAdmin ? 'All users wishlist entries' : 'Books you want to read'}
       />
       <CardContent>
-        {isLoading ? (
+        {loading ? (
           <CircularProgress />
         ) : (
           <Box>
@@ -468,7 +501,7 @@ export const WishlistCard = () => {
               {wishlistCount}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Books in your wishlist
+              {isAdmin ? 'Books wishlisted by all users' : 'Books in your wishlist'}
             </Typography>
           </Box>
         )}

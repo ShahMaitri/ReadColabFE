@@ -35,10 +35,6 @@ import {
 } from 'recharts';
 import {
   useAnalyticsDashboard,
-  useOverdueStats,
-  useBorrowTrendLastDays,
-  useBorrowStatusDistribution,
-  useUsersByRole,
   useCategoryBorrowStats
 } from '../../hooks/useAnalytics';
 import BookIcon from '@mui/icons-material/Book';
@@ -107,10 +103,6 @@ export const AdminDashboard = () => {
     isLoading: dashboardLoading,
     error: dashboardError
   } = useAnalyticsDashboard();
-  const { data: overdueStats } = useOverdueStats();
-  const { data: borrowTrend } = useBorrowTrendLastDays(30);
-  const { data: borrowStatus } = useBorrowStatusDistribution();
-  const { data: usersByRole } = useUsersByRole();
   const { data: categoryStats } = useCategoryBorrowStats();
 
   if (dashboardLoading) {
@@ -133,10 +125,20 @@ export const AdminDashboard = () => {
     return null;
   }
 
-  const { stats, mostBorrowed, leastBorrowed, lateReturns } = dashboardData;
+  const {
+    stats,
+    mostBorrowed,
+    leastBorrowed,
+    lateReturns,
+    borrowStatusDist,
+    borrowTrend,
+    usersByRole,
+    overdueStats,
+    categoryBorrowStats
+  } = dashboardData;
   const baseChartHeight = isSmallScreen ? 260 : 320;
   const compactTickFontSize = isSmallScreen ? 10 : 12;
-  const normalizedCategoryStats = (categoryStats ?? []).map((item) => ({
+  const normalizedCategoryStats = (categoryStats ?? categoryBorrowStats ?? []).map((item) => ({
     ...item,
     borrowCount: Number(item.borrowCount) || 0
   }));
@@ -297,11 +299,7 @@ export const AdminDashboard = () => {
           width: '100%',
           display: 'grid',
           gap: 3,
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, minmax(0, 1fr))',
-            md: 'repeat(4, minmax(0, 1fr))'
-          }
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))'
         }}
       >
         <StatCard title="Total Books" value={stats.totalBooks} icon={BookIcon} color="#3498db" />
@@ -393,11 +391,11 @@ export const AdminDashboard = () => {
               Borrow Status
             </Typography>
             <Box sx={chartContentSx}>
-              {borrowStatus && borrowStatus.length > 0 ? (
+              {borrowStatusDist && borrowStatusDist.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
                     <Pie
-                      data={borrowStatus}
+                      data={borrowStatusDist}
                       cx="50%"
                       cy="46%"
                       nameKey="status"
@@ -407,7 +405,7 @@ export const AdminDashboard = () => {
                       fill="#8884d8"
                       dataKey="count"
                     >
-                      {borrowStatus.map((_, index) => (
+                      {borrowStatusDist.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>

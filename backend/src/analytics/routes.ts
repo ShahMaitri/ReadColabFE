@@ -12,6 +12,9 @@ import {
   getBooksByCategory,
   getCategoryBorrowStats,
   getOverdueStats,
+  getGlobalWishlistCount,
+  getGlobalDueSoonBorrows,
+  getGlobalReadingStatistics,
   getComprehensiveDashboard,
   getUserStatistics,
   getTrendingBooks,
@@ -45,6 +48,9 @@ analyticsRouter.get('/borrows/category-stats', getCategoryBorrowStats);
 analyticsRouter.get('/users/by-role', getUsersByRole);
 analyticsRouter.get('/activity/recent', getRecentActivity);
 analyticsRouter.get('/overdue/stats', getOverdueStats);
+analyticsRouter.get('/wishlist/count', getGlobalWishlistCount);
+analyticsRouter.get('/borrows/due-soon', getGlobalDueSoonBorrows);
+analyticsRouter.get('/reading-stats/global', getGlobalReadingStatistics);
 analyticsRouter.get('/user-stats', getUserStatistics);
 
 // Reporting module

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/axios';
+import { authStorage } from '../utils/storage';
 
 export interface Book {
   id: string;
@@ -35,6 +36,13 @@ export interface ReviewRecord {
   rating: number;
   review: string;
   createdAt: string;
+  book?: Book;
+}
+
+interface ActivityRecord {
+  type: string;
+  title: string;
+  date: string;
   book?: Book;
 }
 
@@ -335,6 +343,46 @@ export const useRecentActivity = () => {
     queryKey: ['recentActivity'],
     queryFn: async () => {
       try {
+        const currentUser = authStorage.getUser<{ role?: string }>();
+        const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
+
+        if (isAdmin) {
+          const response = await apiClient.get('/analytics/activity/recent', {
+            params: { limit: 20 }
+          });
+
+          const adminActivities = (response.data?.data || []) as Array<{
+            type?: string;
+            timestamp?: string;
+            status?: string;
+            user?: { name?: string };
+            book?: { title?: string };
+          }>;
+
+          return adminActivities
+            .map((item): ActivityRecord => {
+              const actor = item.user?.name ? `${item.user.name} ` : '';
+              const bookTitle = item.book?.title || 'book';
+              const action =
+                item.type === 'return'
+                  ? 'returned'
+                  : item.type === 'reservation'
+                    ? 'reserved'
+                    : item.status === 'PENDING'
+                      ? 'requested'
+                      : 'borrowed';
+
+              return {
+                type: item.type || 'activity',
+                title: `${actor}${action} "${bookTitle}"`,
+                date: item.timestamp || new Date().toISOString(),
+                book: item.book as Book | undefined
+              };
+            })
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .slice(0, 8);
+        }
+
         const [borrows, reviews] = await Promise.all([
           apiClient.get('/borrow/history', {
             params: { page: 1, limit: 20 }
@@ -347,7 +395,7 @@ export const useRecentActivity = () => {
         const borrowEntries = borrows.data?.data?.data || [];
         const reviewEntries = reviews.data?.data || [];
 
-        const activities = [
+        const activities: ActivityRecord[] = [
           ...borrowEntries.map((b: BorrowRecord & { createdAt?: string; updatedAt?: string }) => ({
             type: 'borrow',
             title:

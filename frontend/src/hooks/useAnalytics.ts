@@ -28,6 +28,15 @@ export interface ComprehensiveDashboard {
   };
 }
 
+export interface ReadingStatistics {
+  totalBorrowed: number;
+  totalReturned: number;
+  totalOverdue: number;
+  booksWishlisted: number;
+  booksReviewed: number;
+  averageRating: number;
+}
+
 // Query keys
 export const analyticsKeys = {
   all: ['analytics'],
@@ -43,6 +52,10 @@ export const analyticsKeys = {
   booksByCategory: () => [...analyticsKeys.all, 'booksByCategory'],
   categoryBorrowStats: () => [...analyticsKeys.all, 'categoryBorrowStats'],
   overdueStats: () => [...analyticsKeys.all, 'overdueStats']
+  ,
+  globalWishlistCount: () => [...analyticsKeys.all, 'globalWishlistCount'],
+  globalDueSoonBorrows: (days: number) => [...analyticsKeys.all, 'globalDueSoonBorrows', days],
+  globalReadingStats: () => [...analyticsKeys.all, 'globalReadingStats']
 };
 
 // API Functions
@@ -103,6 +116,21 @@ async function getCategoryBorrowStats() {
 
 async function getOverdueStats() {
   const { data } = await apiClient.get('/analytics/overdue/stats');
+  return data.data;
+}
+
+async function getGlobalWishlistCount() {
+  const { data } = await apiClient.get('/analytics/wishlist/count');
+  return data.data;
+}
+
+async function getGlobalDueSoonBorrows(days: number = 7) {
+  const { data } = await apiClient.get('/analytics/borrows/due-soon', { params: { days } });
+  return data.data;
+}
+
+async function getGlobalReadingStatistics() {
+  const { data } = await apiClient.get<{ data: ReadingStatistics }>('/analytics/reading-stats/global');
   return data.data;
 }
 
@@ -199,6 +227,30 @@ export const useOverdueStats = () => {
   return useQuery({
     queryKey: analyticsKeys.overdueStats(),
     queryFn: getOverdueStats,
+    staleTime: 5 * 60 * 1000
+  });
+};
+
+export const useGlobalWishlistCount = () => {
+  return useQuery({
+    queryKey: analyticsKeys.globalWishlistCount(),
+    queryFn: getGlobalWishlistCount,
+    staleTime: 5 * 60 * 1000
+  });
+};
+
+export const useGlobalDueSoonBorrows = (days: number = 7) => {
+  return useQuery({
+    queryKey: analyticsKeys.globalDueSoonBorrows(days),
+    queryFn: () => getGlobalDueSoonBorrows(days),
+    staleTime: 5 * 60 * 1000
+  });
+};
+
+export const useGlobalReadingStatistics = () => {
+  return useQuery({
+    queryKey: analyticsKeys.globalReadingStats(),
+    queryFn: getGlobalReadingStatistics,
     staleTime: 5 * 60 * 1000
   });
 };

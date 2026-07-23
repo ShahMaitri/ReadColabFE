@@ -1,6 +1,7 @@
 import { Box, Container } from '@mui/material';
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import { FloatingChatbot } from '../components/ai/FloatingChatbot';
 import { Navbar } from '../components/navigation/Navbar';
 import { Sidebar } from '../components/navigation/Sidebar';
 
@@ -31,6 +32,7 @@ export const AppLayout = () => {
       >
         <Outlet />
       </Container>
+      <FloatingChatbot />
     </Box>
   );
 };

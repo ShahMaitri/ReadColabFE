@@ -317,6 +317,37 @@ export class AnalyticsRepository {
     };
   }
 
+  async getGlobalWishlistCount() {
+    const totalWishlisted = await prisma.wishlist.count();
+
+    return {
+      totalWishlisted
+    };
+  }
+
+  async getGlobalDueSoonBorrows(days: number = 7) {
+    const now = new Date();
+    const dueLimit = new Date();
+    dueLimit.setDate(dueLimit.getDate() + days);
+
+    const borrows = await prisma.borrow.findMany({
+      where: {
+        status: 'BORROWED',
+        dueDate: {
+          gte: now,
+          lte: dueLimit
+        }
+      },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        book: { select: { id: true, title: true } }
+      },
+      orderBy: { dueDate: 'asc' }
+    });
+
+    return borrows;
+  }
+
   async getMonthlyReports(filters: ReportFilters = {}) {
     const createdAt = buildDateWhere(filters);
 

@@ -118,6 +118,47 @@ export class AnalyticsService {
     return analyticsRepository.getOverdueStats();
   }
 
+  async getGlobalWishlistCount() {
+    return analyticsRepository.getGlobalWishlistCount();
+  }
+
+  async getGlobalDueSoonBorrows(days: number = 7) {
+    return analyticsRepository.getGlobalDueSoonBorrows(days);
+  }
+
+  async getGlobalReadingStatistics() {
+    const { prisma } = await import('../config/prisma');
+
+    const [totalBorrowed, totalReturned, totalOverdue, booksWishlisted, booksReviewed] = await Promise.all([
+      prisma.borrow.count(),
+      prisma.borrow.count({
+        where: { status: 'RETURNED' }
+      }),
+      prisma.borrow.count({
+        where: { status: 'OVERDUE' }
+      }),
+      prisma.wishlist.count(),
+      prisma.review.count()
+    ]);
+
+    const reviews = await prisma.review.findMany({
+      select: { rating: true }
+    });
+
+    const averageRating = reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0;
+
+    return {
+      totalBorrowed,
+      totalReturned,
+      totalOverdue,
+      booksWishlisted,
+      booksReviewed,
+      averageRating: Math.round(averageRating * 10) / 10
+    };
+  }
+
   async getComprehensiveDashboard() {
     const [
       stats,
