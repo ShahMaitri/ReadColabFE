@@ -176,19 +176,16 @@ export class BookService {
   }
 
   async generateQRCode(bookId: string): Promise<string> {
-    // TODO: Implement after installing qrcode package
-    // const qrData = `${process.env.APP_URL || 'http://localhost:5173'}/books/${bookId}`;
-    // return QRCode.toDataURL(qrData, {
-    //   errorCorrectionLevel: 'H',
-    //   type: 'image/png',
-    //   width: 300,
-    //   margin: 2,
-    //   color: {
-    //     dark: '#000000',
-    //     light: '#FFFFFF'
-    //   }
-    // });
-    return ''; // Return empty string for now
+    // Generate QR code URL pointing to the book details page
+    const bookUrl = `${process.env.APP_URL || 'http://localhost:5175'}/books/${bookId}`;
+    
+    // Use QR Server API to generate QR code (free service)
+    // The QR code is returned as a data URL PNG image
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(bookUrl)}`;
+    
+    // For now, return the direct image URL from the QR Server API
+    // In production, you might want to cache these or use a local implementation
+    return qrApiUrl;
   }
 
   async getCategories(): Promise<string[]> {

@@ -65,7 +65,24 @@ export class AIController {
       throw new AppError('Preferences cannot be empty', 400);
     }
 
-    const recommendations = await this.aiService.recommendBooks(preferences);
+    let recommendations: unknown;
+
+    try {
+      recommendations = await this.aiService.recommendBooks(preferences);
+    } catch (error) {
+      if (!this.isRateLimitError(error)) {
+        throw error;
+      }
+
+      recommendations = [
+        {
+          title: 'Smart Library Suggestions',
+          author: 'Read Colab',
+          reason: 'I am temporarily rate-limited by the AI provider. Browse our featured collections or check back in a few moments for personalized recommendations.',
+          isbn: 'temp'
+        }
+      ];
+    }
 
     res.status(200).json({
       success: true,
@@ -93,7 +110,17 @@ export class AIController {
       throw new AppError('Book content is required', 400);
     }
 
-    const summary = await this.aiService.summarizeBook(title, content);
+    let summary: string;
+
+    try {
+      summary = await this.aiService.summarizeBook(title, content);
+    } catch (error) {
+      if (!this.isRateLimitError(error)) {
+        throw error;
+      }
+
+      summary = `I am temporarily rate-limited by the AI provider. The summary for "${title}" is temporarily unavailable. Please try again in a few moments.`;
+    }
 
     res.status(200).json({
       success: true,
@@ -126,7 +153,17 @@ export class AIController {
       throw new AppError('Books must be different', 400);
     }
 
-    const comparison = await this.aiService.compareBooks(book1, book2);
+    let comparison: string;
+
+    try {
+      comparison = await this.aiService.compareBooks(book1, book2);
+    } catch (error) {
+      if (!this.isRateLimitError(error)) {
+        throw error;
+      }
+
+      comparison = `I am temporarily rate-limited by the AI provider. The comparison between "${book1}" and "${book2}" is temporarily unavailable. Please try again in a few moments.`;
+    }
 
     res.status(200).json({
       success: true,
@@ -160,7 +197,19 @@ export class AIController {
       throw new AppError('Context array cannot be empty', 400);
     }
 
-    const results = await this.aiService.semanticSearch(query, context);
+    let results: string[];
+
+    try {
+      results = await this.aiService.semanticSearch(query, context);
+    } catch (error) {
+      if (!this.isRateLimitError(error)) {
+        throw error;
+      }
+
+      results = [
+        `I am temporarily rate-limited by the AI provider. Semantic search for "${query}" is not available. Please try again in a few moments or use our standard search.`
+      ];
+    }
 
     res.status(200).json({
       success: true,

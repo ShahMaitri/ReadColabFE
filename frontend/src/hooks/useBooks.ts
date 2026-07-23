@@ -218,6 +218,7 @@ export const useRemoveCover = () => {
 
 export const useGenerateQRCode = () => {
   return useMutation({
-    mutationFn: (id: string) => bookApi.generateQRCode(id)
+    mutationFn: (id: string) => bookApi.generateQRCode(id),
+    retry: 1
   });
 };

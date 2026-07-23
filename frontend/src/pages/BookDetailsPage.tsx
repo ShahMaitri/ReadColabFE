@@ -26,7 +26,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useRequestBorrow, useReserveBook, useActiveBorrows, useUserReservations } from '../hooks/useBorrowReservation';
 import { useAddToWishlist, useIsInWishlist, useRemoveFromWishlist } from '../hooks/useWishlist';
 import { useNotification } from '../context/NotificationContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BookReviewSection } from '../components/reviews/BookReviewSection';
 import { resolveCoverImageUrl } from '../utils/media';
 
@@ -38,7 +38,7 @@ export const BookDetailsPage = () => {
   const { data: book, isLoading, error } = useBook(id || '');
   const { mutate: uploadCover, isPending: isUploading } = useUploadCover();
   const { mutate: removeCover, isPending: isRemovingCover } = useRemoveCover();
-  const { mutate: generateQRCode, data: qrData, isPending: isGenerating } = useGenerateQRCode();
+  const { mutate: generateQRCode, data: qrData, isPending: isGenerating, error: qrError } = useGenerateQRCode();
   const { mutate: requestBorrow, isPending: isBorrowing } = useRequestBorrow();
   const { mutate: reserveBook, isPending: isReserving } = useReserveBook();
   const { data: activeBorrows = [] } = useActiveBorrows();
@@ -47,6 +47,23 @@ export const BookDetailsPage = () => {
   const { mutate: addToWishlist, isPending: isAddingToWishlist } = useAddToWishlist();
   const { mutate: removeFromWishlist, isPending: isRemovingFromWishlist } = useRemoveFromWishlist();
   const [showQRDialog, setShowQRDialog] = useState(false);
+
+  // Auto-open QR dialog when QR code is generated
+  useEffect(() => {
+    if (qrData?.qrCode) {
+      setShowQRDialog(true);
+    }
+  }, [qrData?.qrCode]);
+
+  // Handle QR code generation errors
+  useEffect(() => {
+    if (qrError) {
+      showNotification(
+        (qrError as any)?.response?.data?.message || 'Failed to generate QR code',
+        'error'
+      );
+    }
+  }, [qrError, showNotification]);
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
@@ -193,7 +210,14 @@ export const BookDetailsPage = () => {
 
   const handleGenerateQR = () => {
     if (id) {
-      generateQRCode(id);
+      generateQRCode(id, {
+        onError: (error: any) => {
+          showNotification(
+            error?.response?.data?.message || 'Failed to generate QR code',
+            'error'
+          );
+        }
+      });
     }
   };
 
