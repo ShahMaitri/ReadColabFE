@@ -1,5 +1,4 @@
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
-import AutoStoriesRoundedIcon from '@mui/icons-material/AutoStoriesRounded';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -12,6 +11,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Stack, Typography } from '@mui/material';
 import { NavLink } from 'react-router-dom';
+import { AnimatedBookLogo } from '../branding/AnimatedBookLogo';
 import { useAuth } from '../../hooks/useAuth';
 
 interface SidebarProps {
@@ -42,20 +42,7 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
     <Box sx={{ width: drawerWidth, height: '100%' }} role='presentation'>
       <Box sx={{ px: 2.5, pt: 2.5, pb: 1.75 }}>
         <Stack spacing={0.5} sx={{ alignItems: 'center', textAlign: 'center' }}>
-          <Box
-            sx={{
-              width: 52,
-              height: 52,
-              borderRadius: 3,
-              display: 'grid',
-              placeItems: 'center',
-              bgcolor: 'primary.main',
-              color: 'primary.contrastText',
-              boxShadow: (theme) => `0 10px 22px ${theme.palette.primary.main}55`
-            }}
-          >
-            <AutoStoriesRoundedIcon sx={{ fontSize: 30 }} />
-          </Box>
+          <AnimatedBookLogo badgeSize={52} bookWidth={44} bookHeight={34} durationSeconds={2.35} />
           <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
             Read Colab
           </Typography>

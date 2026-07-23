@@ -1,4 +1,5 @@
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import { AnimatedBookLogo } from '../branding/AnimatedBookLogo';
 
 export const LoadingScreen = () => {
   return (
@@ -11,7 +12,9 @@ export const LoadingScreen = () => {
       }}
     >
       <Box sx={{ textAlign: 'center' }}>
-        <CircularProgress color='primary' />
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <AnimatedBookLogo badgeSize={52} bookWidth={44} bookHeight={34} durationSeconds={2.35} />
+        </Box>
         <Typography variant='body2' sx={{ mt: 2, color: 'text.secondary' }}>
           Loading Smart Office Library...
         </Typography>

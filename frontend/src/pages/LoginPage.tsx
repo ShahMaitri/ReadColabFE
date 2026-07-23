@@ -12,7 +12,6 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import AutoStoriesRoundedIcon from '@mui/icons-material/AutoStoriesRounded';
 import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import { useForm } from 'react-hook-form';
@@ -21,6 +20,7 @@ import { z } from 'zod';
 import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/auth.service';
 import { useState } from 'react';
+import { AnimatedBookLogo } from '../components/branding/AnimatedBookLogo';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -61,33 +61,36 @@ export const LoginPage = () => {
   return (
     <Box
       sx={{
+        '@keyframes loginCardIn': {
+          '0%': { opacity: 0, transform: 'translateY(16px) scale(0.98)' },
+          '100%': { opacity: 1, transform: 'translateY(0) scale(1)' }
+        },
+        '@keyframes loginBgDrift': {
+          '0%': { backgroundPosition: '0% 0%, 100% 100%, 0 0' },
+          '100%': { backgroundPosition: '8% 5%, 92% 95%, 0 0' }
+        },
         minHeight: '100vh',
         display: 'grid',
         placeItems: 'center',
         p: 2,
         background: (theme) => theme.palette.mode === 'dark'
           ? 'radial-gradient(900px 420px at 15% 15%, rgba(118,210,207,0.16), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(154,182,218,0.16), transparent 48%), #0f131a'
-          : 'radial-gradient(900px 420px at 15% 15%, rgba(11,110,109,0.20), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(59,83,112,0.14), transparent 48%), #f5f7fb'
+          : 'radial-gradient(900px 420px at 15% 15%, rgba(11,110,109,0.20), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(59,83,112,0.14), transparent 48%), #f5f7fb',
+        animation: 'loginBgDrift 6s ease-in-out infinite alternate'
       }}
     >
-      <Card sx={{ width: '100%', maxWidth: 440, borderRadius: 5 }}>
+      <Card
+        sx={{
+          width: '100%',
+          maxWidth: 440,
+          borderRadius: 5,
+          animation: 'loginCardIn 420ms ease-out'
+        }}
+      >
         <CardContent sx={{ p: 4 }}>
           <Stack spacing={2.5}>
             <Stack spacing={1} sx={{ alignItems: 'center' }}>
-              <Box
-                sx={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 3,
-                  display: 'grid',
-                  placeItems: 'center',
-                  bgcolor: 'primary.main',
-                  color: 'primary.contrastText',
-                  boxShadow: (theme) => `0 12px 28px ${theme.palette.primary.main}55`
-                }}
-              >
-                <AutoStoriesRoundedIcon sx={{ fontSize: 36 }} />
-              </Box>
+              <AnimatedBookLogo badgeSize={68} bookWidth={52} bookHeight={40} durationSeconds={2.35} />
               <Typography variant='h5' gutterBottom>
                 Welcome Back
               </Typography>

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/auth.service';
 import { useState } from 'react';
+import { AnimatedBookLogo } from '../components/branding/AnimatedBookLogo';
 
 const registerSchema = z
   .object({
@@ -52,15 +53,29 @@ export const RegisterPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
-      <Card sx={{ width: '100%', maxWidth: 420 }}>
-        <CardContent>
-          <Typography variant='h5' gutterBottom>
-            Create Account
-          </Typography>
-          <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-            Join Smart Office Library
-          </Typography>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'grid',
+        placeItems: 'center',
+        p: 2,
+        background: (theme) => theme.palette.mode === 'dark'
+          ? 'radial-gradient(900px 420px at 15% 15%, rgba(118,210,207,0.16), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(154,182,218,0.16), transparent 48%), #0f131a'
+          : 'radial-gradient(900px 420px at 15% 15%, rgba(11,110,109,0.20), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(59,83,112,0.14), transparent 48%), #f5f7fb'
+      }}
+    >
+      <Card sx={{ width: '100%', maxWidth: 440, borderRadius: 5 }}>
+        <CardContent sx={{ p: 4 }}>
+          <Stack spacing={2.5}>
+            <Stack spacing={1} sx={{ alignItems: 'center' }}>
+              <AnimatedBookLogo badgeSize={52} bookWidth={44} bookHeight={34} durationSeconds={2.35} />
+              <Typography variant='h5' gutterBottom>
+                Create Account
+              </Typography>
+              <Typography variant='body2' color='text.secondary' sx={{ textAlign: 'center' }}>
+                Join Smart Office Library
+              </Typography>
+            </Stack>
           {error && (
             <Alert severity='error' sx={{ mb: 2 }}>
               {error}
@@ -107,6 +122,7 @@ export const RegisterPage = () => {
                 Sign In
               </MuiLink>
             </Typography>
+          </Stack>
           </Stack>
         </CardContent>
       </Card>

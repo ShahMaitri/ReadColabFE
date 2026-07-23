@@ -1,5 +1,5 @@
-import AutoStoriesRoundedIcon from '@mui/icons-material/AutoStoriesRounded';
 import { Box, LinearProgress, Paper, Stack, Typography } from '@mui/material';
+import { AnimatedBookLogo } from '../branding/AnimatedBookLogo';
 
 export const SplashScreen = () => {
   return (
@@ -26,22 +26,8 @@ export const SplashScreen = () => {
         }}
       >
         <Stack spacing={2.5} sx={{ alignItems: 'center' }}>
-          <Box
-            sx={{
-              width: 72,
-              height: 72,
-              display: 'grid',
-              placeItems: 'center',
-              mx: 'auto',
-              borderRadius: 3,
-              backgroundColor: 'primary.main',
-              color: 'primary.contrastText',
-              boxShadow: (theme) => `0 14px 32px ${theme.palette.primary.main}55`,
-              animation: 'splashScale 650ms ease-out',
-              transformOrigin: 'center center'
-            }}
-          >
-            <AutoStoriesRoundedIcon sx={{ fontSize: 38 }} />
+          <Box sx={{ animation: 'splashScale 650ms ease-out', transformOrigin: 'center center' }}>
+            <AnimatedBookLogo badgeSize={52} bookWidth={44} bookHeight={34} durationSeconds={2.35} />
           </Box>
 
           <Box sx={{ textAlign: 'center' }}>
