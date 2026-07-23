@@ -1,5 +1,7 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AppLayout } from '../layouts/AppLayout';
+import { SplashScreen } from '../components/feedback/SplashScreen';
 import { DashboardPage } from '../pages/DashboardPage';
 import { ErrorPage } from '../pages/ErrorPage';
 import { LoginPage } from '../pages/LoginPage';
@@ -15,15 +17,53 @@ import { MyReviewsPage } from '../pages/MyReviewsPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AdminRoute } from './AdminRoute';
-import { AdminLayout } from '../layouts/AdminLayout';
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { ManageBooksPage } from '../pages/admin/ManageBooksPage';
 import { ManageUsersPage } from '../pages/admin/ManageUsersPage';
 import { ManageBorrowsPage } from '../pages/admin/ManageBorrowsPage';
 import { ManageReservationsPage } from '../pages/admin/ManageReservationsPage';
 import { ReviewManagementPage } from '../pages/admin/ReviewManagementPage';
+import { useAuth } from '../hooks/useAuth';
 
 export const AppRouter = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [showSplash, setShowSplash] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!showSplash) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setShowSplash(false);
+    }, 2400);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [showSplash]);
+
+  useEffect(() => {
+    if (showSplash || isLoading) {
+      return;
+    }
+
+    if (isAuthenticated && location.pathname === '/login') {
+      navigate('/', { replace: true });
+      return;
+    }
+
+    if (!isAuthenticated && location.pathname === '/') {
+      navigate('/login', { replace: true });
+    }
+  }, [isAuthenticated, isLoading, location.pathname, navigate, showSplash]);
+
+  if (showSplash) {
+    return <SplashScreen />;
+  }
+
   return (
     <Routes>
       <Route path='/login' element={<LoginPage />} />
@@ -41,16 +81,14 @@ export const AppRouter = () => {
           <Route path='/my-reviews' element={<MyReviewsPage />} />
           <Route path='/borrow-history' element={<BorrowHistoryPage />} />
           <Route path='/reports' element={<ReportsPage />} />
-        </Route>
 
-        <Route element={<AdminRoute />}>
-          <Route path='/admin' element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path='books' element={<ManageBooksPage />} />
-            <Route path='users' element={<ManageUsersPage />} />
-            <Route path='borrows' element={<ManageBorrowsPage />} />
-            <Route path='reservations' element={<ManageReservationsPage />} />
-            <Route path='reviews' element={<ReviewManagementPage />} />
+          <Route element={<AdminRoute />}>
+            <Route path='/admin' element={<AdminDashboard />} />
+            <Route path='/admin/books' element={<ManageBooksPage />} />
+            <Route path='/admin/users' element={<ManageUsersPage />} />
+            <Route path='/admin/borrows' element={<ManageBorrowsPage />} />
+            <Route path='/admin/reservations' element={<ManageReservationsPage />} />
+            <Route path='/admin/reviews' element={<ReviewManagementPage />} />
           </Route>
         </Route>
       </Route>

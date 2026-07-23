@@ -1,8 +1,10 @@
 import {
+  alpha,
   Alert,
   Box,
   Container,
   Pagination,
+  Paper,
   Stack,
   TextField,
   Typography
@@ -21,15 +23,16 @@ export const ReviewManagementPage = () => {
   const [ratingFilter, setRatingFilter] = useState<number | undefined>();
   const [search, setSearch] = useState('');
   const [bookId, setBookId] = useState('');
-  const [userId, setUserId] = useState('');
+  const [userName, setUserName] = useState('');
 
   const { data, isLoading, error } = useAdminReviews(page, 20, sortBy, {
     rating: ratingFilter,
-    search,
+    search: userName.trim() ? undefined : search,
     bookId: bookId.trim() || undefined,
-    userId: userId.trim() || undefined
+    userName: userName.trim() || undefined
   });
   const deleteReviewMutation = useDeleteAdminReview();
+  const hasLoadError = Boolean(error);
 
   const reviews = data?.data || [];
   const pagination = data?.pagination;
@@ -42,57 +45,63 @@ export const ReviewManagementPage = () => {
     }
   };
 
-  if (error) {
-    return (
-      <Container sx={{ py: 4 }}>
-        <Alert severity="error">Failed to load review management data</Alert>
-      </Container>
-    );
-  }
-
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 2.5, md: 4 } }}>
       <Stack spacing={3}>
-        <Box>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2.5, md: 3 },
+            borderRadius: '12px',
+            border: '1px solid',
+            borderColor: 'divider',
+            background: (theme) =>
+              theme.palette.mode === 'dark'
+                ? `linear-gradient(120deg, ${alpha(theme.palette.primary.dark, 0.24)} 0%, ${alpha(theme.palette.background.paper, 0.94)} 100%)`
+                : `linear-gradient(120deg, ${alpha(theme.palette.primary.light, 0.24)} 0%, ${alpha('#ffffff', 0.97)} 100%)`
+          }}
+        >
           <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
-            Review Management
+            Reviews
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Moderate all employee reviews and remove inappropriate content.
+            View all book reviews with reviewer details and moderate inappropriate content.
           </Typography>
-        </Box>
+        </Paper>
 
         <Alert severity="info">Reported reviews support is reserved for future moderation data.</Alert>
 
-        <ReviewFilters
-          sortBy={sortBy}
-          rating={ratingFilter}
-          search={search}
-          onSortChange={(value) => setSortBy(value)}
-          onRatingChange={(value) => {
-            setRatingFilter(value);
-            setPage(1);
-          }}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(1);
-          }}
-        />
+        <Paper elevation={0} sx={{ p: 2.5, borderRadius: '12px', border: '1px solid', borderColor: 'divider' }}>
+          <ReviewFilters
+            sortBy={sortBy}
+            rating={ratingFilter}
+            search={search}
+            onSortChange={(value) => setSortBy(value)}
+            onRatingChange={(value) => {
+              setRatingFilter(value);
+              setPage(1);
+            }}
+            onSearchChange={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+          />
 
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-          <TextField
-            label="Book ID"
-            value={bookId}
-            onChange={(event) => setBookId(event.target.value)}
-            fullWidth
-          />
-          <TextField
-            label="Employee ID"
-            value={userId}
-            onChange={(event) => setUserId(event.target.value)}
-            fullWidth
-          />
-        </Stack>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mt: 2 }}>
+            <TextField
+              label="Book ID"
+              value={bookId}
+              onChange={(event) => setBookId(event.target.value)}
+              fullWidth
+            />
+            <TextField
+              label="Employee Name"
+              value={userName}
+              onChange={(event) => setUserName(event.target.value)}
+              fullWidth
+            />
+          </Stack>
+        </Paper>
 
         <Typography variant="body2" color="text.secondary">
           {totalText}
@@ -109,7 +118,14 @@ export const ReviewManagementPage = () => {
             emptyState={<ReviewEmptyState title="No reviews found" />}
           />
         ) : (
-          <ReviewEmptyState title="No reviews found" description="Try widening the search or clearing filters." />
+          <ReviewEmptyState
+            title={hasLoadError ? 'No reviews available' : 'No reviews found'}
+            description={
+              hasLoadError
+                ? 'Unable to load reviews right now. Please try again shortly.'
+                : 'Try widening the search or clearing filters.'
+            }
+          />
         )}
 
         {pagination && pagination.pages > 1 && (

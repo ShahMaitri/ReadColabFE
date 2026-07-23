@@ -6,7 +6,7 @@ import { prisma } from '../config/prisma';
 import { NotificationService } from '../notifications';
 
 const borrowRepository = new BorrowRepository(prisma);
-const bookRepository = new BookRepository(prisma);
+const bookRepository = new BookRepository();
 
 const BORROW_STATUS = {
   PENDING: 'PENDING',

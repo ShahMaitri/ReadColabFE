@@ -38,6 +38,125 @@ export interface ReviewRecord {
   book?: Book;
 }
 
+interface RecommendedBookItem {
+  title: string;
+  author: string;
+}
+
+const sanitizeRecommendationItem = (item: unknown): RecommendedBookItem | null => {
+  if (!item || typeof item !== 'object') {
+    return null;
+  }
+
+  const record = item as Record<string, unknown>;
+  const title = typeof record.title === 'string' ? record.title.trim() : '';
+  if (!title) {
+    return null;
+  }
+
+  return {
+    title,
+    author: typeof record.author === 'string' && record.author.trim() ? record.author.trim() : 'Recommended'
+  };
+};
+
+const normalizeRecommendationArray = (items: unknown[]): RecommendedBookItem[] => {
+  return items
+    .map((item) => sanitizeRecommendationItem(item))
+    .filter((item): item is RecommendedBookItem => Boolean(item))
+    .slice(0, 25);
+};
+
+const parseJsonRecommendationString = (value: string): RecommendedBookItem[] => {
+  try {
+    const parsed = JSON.parse(value) as unknown;
+
+    if (Array.isArray(parsed)) {
+      return normalizeRecommendationArray(parsed);
+    }
+
+    if (parsed && typeof parsed === 'object') {
+      const recommendations = (parsed as Record<string, unknown>).recommendations;
+      if (Array.isArray(recommendations)) {
+        return normalizeRecommendationArray(recommendations);
+      }
+    }
+  } catch (_error) {
+    // Not JSON; fallback to plain text parsing.
+  }
+
+  return [];
+};
+
+const parseRecommendationText = (value: string): RecommendedBookItem[] => {
+  const normalizedValue = value.replace(/\\"/g, '"');
+  const titleMatches = Array.from(normalizedValue.matchAll(/"title"\s*:\s*"([^"]+)"/g));
+
+  if (titleMatches.length > 0) {
+    const authorMatches = Array.from(normalizedValue.matchAll(/"author"\s*:\s*"([^"]+)"/g));
+    return titleMatches
+      .map((match, index) => ({
+        title: match[1].trim(),
+        author: authorMatches[index]?.[1]?.trim() || 'Recommended'
+      }))
+      .filter((item) => item.title.length > 0)
+      .slice(0, 25);
+  }
+
+  return value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.replace(/^[-*\d.)\s]+/, '').trim())
+    .map((line) => {
+      const bySplit = line.split(/\s+by\s+/i);
+      if (bySplit.length >= 2) {
+        return {
+          title: bySplit[0].trim().replace(/^"|"$/g, ''),
+          author: bySplit.slice(1).join(' by ').trim()
+        };
+      }
+
+      const dashSplit = line.split(/\s[-–]\s/);
+      if (dashSplit.length >= 2) {
+        return {
+          title: dashSplit[0].trim().replace(/^"|"$/g, ''),
+          author: dashSplit.slice(1).join(' - ').trim()
+        };
+      }
+
+      return {
+        title: line.replace(/^"|"$/g, ''),
+        author: 'Recommended'
+      };
+    })
+    .filter((item) => item.title.length > 0)
+    .slice(0, 25);
+};
+
+const normalizeRecommendations = (raw: unknown): RecommendedBookItem[] => {
+  if (Array.isArray(raw)) {
+    return normalizeRecommendationArray(raw);
+  }
+
+  if (raw && typeof raw === 'object') {
+    const recommendations = (raw as Record<string, unknown>).recommendations;
+    if (Array.isArray(recommendations)) {
+      return normalizeRecommendationArray(recommendations);
+    }
+  }
+
+  if (typeof raw === 'string' && raw.trim()) {
+    const parsedJsonItems = parseJsonRecommendationString(raw);
+    if (parsedJsonItems.length > 0) {
+      return parsedJsonItems;
+    }
+    return parseRecommendationText(raw);
+  }
+
+  return [];
+};
+
 // Get all available books
 export const useAvailableBooks = () => {
   return useQuery({
@@ -75,8 +194,10 @@ export const useUserBorrows = () => {
     queryKey: ['userBorrows'],
     queryFn: async () => {
       try {
-        const response = await apiClient.get('/borrow/user/books');
-        return response.data.data || [];
+        const response = await apiClient.get('/borrow/history', {
+          params: { page: 1, limit: 100 }
+        });
+        return response.data.data?.data || [];
       } catch (error) {
         return [];
       }
@@ -111,18 +232,36 @@ export const useUserReviews = () => {
 export const useRecommendedBooks = () => {
   return useQuery({
     queryKey: ['recommendedBooks'],
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       try {
         const response = await apiClient.post('/ai/recommendations', {
           preferences: 'general recommendations based on popular books'
         });
-        return response.data.data?.recommendations || [];
+        const normalized = normalizeRecommendations(response.data.data?.recommendations);
+        if (normalized.length > 0) {
+          return normalized;
+        }
       } catch (error) {
-        // Fallback to recent books if AI endpoint fails
-        return [];
+        // Ignore and fallback below
       }
+
+      const fallbackResponse = await apiClient.get('/books', {
+        params: {
+          limit: 25,
+          sortBy: 'createdAt',
+          sortOrder: 'desc'
+        }
+      });
+
+      const fallbackBooks = fallbackResponse.data.data?.data || [];
+      return fallbackBooks.map((book: any) => ({
+        title: book.title,
+        author: book.author || 'Unknown'
+      }));
     },
-    staleTime: 30 * 60 * 1000 // 30 minutes
+    staleTime: 60 * 1000 // 1 minute
   });
 };
 
@@ -197,18 +336,30 @@ export const useRecentActivity = () => {
     queryFn: async () => {
       try {
         const [borrows, reviews] = await Promise.all([
-          apiClient.get('/borrow/history'),
-          apiClient.get('/reviews')
+          apiClient.get('/borrow/history', {
+            params: { page: 1, limit: 20 }
+          }),
+          apiClient.get('/reviews/me', {
+            params: { page: 1, limit: 20 }
+          })
         ]);
 
+        const borrowEntries = borrows.data?.data?.data || [];
+        const reviewEntries = reviews.data?.data || [];
+
         const activities = [
-          ...(borrows.data.data || []).map((b: BorrowRecord) => ({
+          ...borrowEntries.map((b: BorrowRecord & { createdAt?: string; updatedAt?: string }) => ({
             type: 'borrow',
-            title: `Borrowed "${b.book?.title}"`,
-            date: b.borrowDate || new Date().toISOString(),
+            title:
+              b.status === 'RETURNED'
+                ? `Returned "${b.book?.title}"`
+                : b.status === 'PENDING'
+                  ? `Requested "${b.book?.title}"`
+                  : `Borrowed "${b.book?.title}"`,
+            date: b.returnDate || b.borrowDate || b.createdAt || b.updatedAt || new Date().toISOString(),
             book: b.book
           })),
-          ...(reviews.data.data || []).map((r: ReviewRecord) => ({
+          ...reviewEntries.map((r: ReviewRecord) => ({
             type: 'review',
             title: `Reviewed "${r.book?.title}" (${r.rating}★)`,
             date: r.createdAt,

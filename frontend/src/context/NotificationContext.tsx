@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 import { notificationService } from '../services/notification.service';
 import { AuthContext } from './AuthContext';

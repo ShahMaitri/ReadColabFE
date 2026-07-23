@@ -58,6 +58,11 @@ async function rejectBorrow(borrowId: string) {
   return data.data;
 }
 
+async function markBorrowed(borrowId: string) {
+  const { data } = await apiClient.post(`/admin/borrows/${borrowId}/borrow`);
+  return data.data;
+}
+
 async function returnBorrow(borrowId: string) {
   const { data } = await apiClient.post(`/admin/borrows/${borrowId}/return`);
   return data.data;
@@ -159,6 +164,16 @@ export const useRejectBorrow = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (borrowId: string) => rejectBorrow(borrowId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.borrows() });
+    }
+  });
+};
+
+export const useMarkBorrowed = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (borrowId: string) => markBorrowed(borrowId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.borrows() });
     }

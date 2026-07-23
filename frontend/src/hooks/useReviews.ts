@@ -60,6 +60,7 @@ export interface ReviewFilters {
 export interface AdminReviewFilters extends ReviewFilters {
   bookId?: string;
   userId?: string;
+  userName?: string;
   reportedOnly?: boolean;
 }
 

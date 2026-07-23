@@ -1,5 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Button, Card, CardContent, Stack, TextField, Typography, Alert, Link as MuiLink } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  IconButton,
+  InputAdornment,
+  Link as MuiLink,
+  Stack,
+  TextField,
+  Typography
+} from '@mui/material';
+import AutoStoriesRoundedIcon from '@mui/icons-material/AutoStoriesRounded';
+import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -18,6 +33,7 @@ export const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -43,15 +59,43 @@ export const LoginPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
-      <Card sx={{ width: '100%', maxWidth: 420 }}>
-        <CardContent>
-          <Typography variant='h5' gutterBottom>
-            Welcome Back
-          </Typography>
-          <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-            Sign in to Smart Office Library
-          </Typography>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'grid',
+        placeItems: 'center',
+        p: 2,
+        background: (theme) => theme.palette.mode === 'dark'
+          ? 'radial-gradient(900px 420px at 15% 15%, rgba(118,210,207,0.16), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(154,182,218,0.16), transparent 48%), #0f131a'
+          : 'radial-gradient(900px 420px at 15% 15%, rgba(11,110,109,0.20), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(59,83,112,0.14), transparent 48%), #f5f7fb'
+      }}
+    >
+      <Card sx={{ width: '100%', maxWidth: 440, borderRadius: 5 }}>
+        <CardContent sx={{ p: 4 }}>
+          <Stack spacing={2.5}>
+            <Stack spacing={1} sx={{ alignItems: 'center' }}>
+              <Box
+                sx={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 3,
+                  display: 'grid',
+                  placeItems: 'center',
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText',
+                  boxShadow: (theme) => `0 12px 28px ${theme.palette.primary.main}55`
+                }}
+              >
+                <AutoStoriesRoundedIcon sx={{ fontSize: 36 }} />
+              </Box>
+              <Typography variant='h5' gutterBottom>
+                Welcome Back
+              </Typography>
+              <Typography variant='body2' color='text.secondary' sx={{ textAlign: 'center' }}>
+                Sign in to continue to Smart Office Library
+              </Typography>
+            </Stack>
+
           {error && (
             <Alert severity='error' sx={{ mb: 2 }}>
               {error}
@@ -68,21 +112,37 @@ export const LoginPage = () => {
             />
             <TextField
               label='Password'
-              type='password'
+              type={showPassword ? 'text' : 'password'}
               error={Boolean(errors.password)}
               helperText={errors.password?.message}
               {...register('password')}
               fullWidth
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <IconButton
+                        edge='end'
+                        aria-label='Toggle password visibility'
+                        onClick={() => setShowPassword((prev) => !prev)}
+                      >
+                        {showPassword ? <VisibilityOffRoundedIcon fontSize='small' /> : <VisibilityRoundedIcon fontSize='small' />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }
+              }}
             />
             <Button variant='contained' type='submit' disabled={isSubmitting} fullWidth>
               {isSubmitting ? 'Signing In...' : 'Sign In'}
             </Button>
-            <Typography variant='body2' textAlign='center'>
+            <Typography variant='body2' sx={{ textAlign: 'center' }}>
               Don't have an account?{' '}
-              <MuiLink href='/register' sx={{ cursor: 'pointer', fontWeight: 500 }}>
+              <MuiLink href='/register' sx={{ cursor: 'pointer', fontWeight: 600 }}>
                 Register
               </MuiLink>
             </Typography>
+          </Stack>
           </Stack>
         </CardContent>
       </Card>

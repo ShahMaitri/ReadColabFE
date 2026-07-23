@@ -45,8 +45,9 @@ export class ReviewRepository {
   }
 
   async create(data: CreateReviewInput): Promise<ReviewWithRelations> {
+    const { userId, bookId, rating, comment } = data;
     return prisma.review.create({
-      data,
+      data: { userId, bookId, rating, comment },
       include: reviewInclude
     });
   }

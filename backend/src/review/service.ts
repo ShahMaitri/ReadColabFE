@@ -84,7 +84,8 @@ export class ReviewService {
       throw new AppError('Rating must be between 1 and 5', 400);
     }
 
-    return reviewRepository.create(data);
+    const { userId, bookId, rating, comment } = data;
+    return reviewRepository.create({ userId, bookId, rating, comment });
   }
 
   async getReviewEligibility(
@@ -159,8 +160,8 @@ export class ReviewService {
       ...(search
         ? {
             OR: [
-              { comment: { contains: search, mode: 'insensitive' as const } },
-              { user: { name: { contains: search, mode: 'insensitive' as const } } }
+              { comment: { contains: search } },
+              { user: { name: { contains: search } } }
             ]
           }
         : {})
@@ -199,8 +200,8 @@ export class ReviewService {
       ...(search
         ? {
             OR: [
-              { comment: { contains: search, mode: 'insensitive' as const } },
-              { book: { title: { contains: search, mode: 'insensitive' as const } } }
+              { comment: { contains: search } },
+              { book: { title: { contains: search } } }
             ]
           }
         : {})
@@ -268,19 +269,23 @@ export class ReviewService {
 
   async getAdminReviews(query: AdminReviewQueryInput): Promise<{ data: Review[]; total: number; pages: number }> {
     const offset = (query.page - 1) * query.limit;
-    const search = query.search?.trim();
+    const userName = query.userName?.trim();
+    const search = userName ? undefined : query.search?.trim();
 
     const where = {
       ...(typeof query.rating === 'number' ? { rating: query.rating } : {}),
       ...(query.bookId ? { bookId: query.bookId } : {}),
       ...(query.userId ? { userId: query.userId } : {}),
+      ...(userName
+        ? { user: { name: { contains: userName } } }
+        : {}),
       ...(search
         ? {
             OR: [
-              { comment: { contains: search, mode: 'insensitive' as const } },
-              { book: { title: { contains: search, mode: 'insensitive' as const } } },
-              { user: { name: { contains: search, mode: 'insensitive' as const } } },
-              { user: { email: { contains: search, mode: 'insensitive' as const } } }
+              { comment: { contains: search } },
+              { book: { title: { contains: search } } },
+              { user: { name: { contains: search } } },
+              { user: { email: { contains: search } } }
             ]
           }
         : {})

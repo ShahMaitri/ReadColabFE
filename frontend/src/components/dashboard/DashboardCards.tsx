@@ -10,7 +10,14 @@ import {
   List,
   ListItem,
   ListItemText,
-  Alert
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Pagination
 } from '@mui/material';
 import {
   LocalLibrary,
@@ -30,6 +37,7 @@ import {
   useUserBorrows,
   useRecommendedBooks
 } from '../../hooks/useDashboard';
+import { useState } from 'react';
 
 export const BooksAvailableCard = () => {
   const { data: books = [], isLoading } = useAvailableBooks();
@@ -51,7 +59,7 @@ export const BooksAvailableCard = () => {
             <Typography variant="h4" sx={{ color: 'success.main', fontWeight: 'bold' }}>
               {totalAvailable}
             </Typography>
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Copies available for borrowing
             </Typography>
           </Box>
@@ -80,7 +88,7 @@ export const BooksBorrowedCard = () => {
             <Typography variant="h4" sx={{ color: 'warning.main', fontWeight: 'bold' }}>
               {borrowedCount}
             </Typography>
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Currently borrowed by you
             </Typography>
           </Box>
@@ -109,7 +117,7 @@ export const OpenRequestsCard = () => {
             <Typography variant="h4" sx={{ color: 'warning.main', fontWeight: 'bold' }}>
               {openRequestsCount}
             </Typography>
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Awaiting admin approval
             </Typography>
           </Box>
@@ -137,7 +145,7 @@ export const DueSoonCard = () => {
             <Typography variant="h4" sx={{ color: 'error.main', fontWeight: 'bold' }}>
               {dueSoon.length}
             </Typography>
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Books to return soon
             </Typography>
             <List sx={{ mt: 1 }}>
@@ -145,14 +153,14 @@ export const DueSoonCard = () => {
                 <ListItem key={idx} sx={{ py: 0.5 }}>
                   <ListItemText
                     primary={<Typography variant="caption">{book.book?.title}</Typography>}
-                    secondary={<Typography variant="caption2">Due: {new Date(book.dueDate).toLocaleDateString()}</Typography>}
+                    secondary={<Typography variant="caption">Due: {new Date(book.dueDate).toLocaleDateString()}</Typography>}
                   />
                 </ListItem>
               ))}
             </List>
           </Box>
         ) : (
-          <Typography variant="body2" color="textSecondary">
+          <Typography variant="body2" color="text.secondary">
             No books due soon
           </Typography>
         )}
@@ -163,7 +171,11 @@ export const DueSoonCard = () => {
 
 export const RecommendedBooksCard = () => {
   const { data: recommended = [], isLoading } = useRecommendedBooks();
-  const displayBooks = Array.isArray(recommended) ? recommended.slice(0, 5) : [];
+  const displayBooks = Array.isArray(recommended) ? recommended : [];
+  const rowsPerPage = 5;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(displayBooks.length / rowsPerPage));
+  const pagedBooks = displayBooks.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   return (
     <Card sx={{ height: '100%' }}>
@@ -175,17 +187,50 @@ export const RecommendedBooksCard = () => {
       <CardContent>
         {isLoading ? (
           <CircularProgress />
+        ) : displayBooks.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            No recommendations available right now.
+          </Typography>
         ) : (
-          <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-            {displayBooks.map((book, idx) => (
-              <ListItem key={idx} sx={{ py: 0.5 }}>
-                <ListItemText
-                  primary={<Typography variant="body2" sx={{ fontWeight: 500 }}>{book.title}</Typography>}
-                  secondary={<Typography variant="caption">{book.author}</Typography>}
+          <Box>
+            <TableContainer>
+              <Table size="small" aria-label="recommended books table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: 56 }}>#</TableCell>
+                    <TableCell>Title</TableCell>
+                    <TableCell>Author</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {pagedBooks.map((book, idx) => (
+                    <TableRow key={`${book.title}-${book.author}-${idx}`} hover>
+                      <TableCell>{(page - 1) * rowsPerPage + idx + 1}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {book.title}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">{book.author}</Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {totalPages > 1 && (
+              <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'flex-end' }}>
+                <Pagination
+                  size="small"
+                  count={totalPages}
+                  page={page}
+                  onChange={(_event, value) => setPage(value)}
                 />
-              </ListItem>
-            ))}
-          </List>
+              </Box>
+            )}
+          </Box>
         )}
       </CardContent>
     </Card>
@@ -194,6 +239,12 @@ export const RecommendedBooksCard = () => {
 
 export const RecentlyAddedCard = () => {
   const { data: recentBooks = [], isLoading } = useRecentlyAddedBooks();
+  const displayBooks = Array.isArray(recentBooks) ? recentBooks : [];
+  const rowsPerPage = 5;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(displayBooks.length / rowsPerPage));
+  const currentPage = Math.min(page, totalPages);
+  const pagedBooks = displayBooks.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   return (
     <Card sx={{ height: '100%' }}>
@@ -205,22 +256,54 @@ export const RecentlyAddedCard = () => {
       <CardContent>
         {isLoading ? (
           <CircularProgress />
+        ) : displayBooks.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            No recently added books available.
+          </Typography>
         ) : (
-          <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-            {Array.isArray(recentBooks) && recentBooks.slice(0, 5).map((book, idx) => (
-              <ListItem key={idx} sx={{ py: 0.5 }}>
-                <ListItemText
-                  primary={<Typography variant="body2" sx={{ fontWeight: 500 }}>{book.title}</Typography>}
-                  secondary={
-                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-                      <Typography variant="caption">{book.author}</Typography>
-                      <Chip label={book.category} size="small" variant="outlined" />
-                    </Box>
-                  }
+          <Box>
+            <TableContainer>
+              <Table size="small" aria-label="recently added books table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: 56 }}>#</TableCell>
+                    <TableCell>Title</TableCell>
+                    <TableCell>Author</TableCell>
+                    <TableCell>Category</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {pagedBooks.map((book, idx) => (
+                    <TableRow key={`${book.id || book.title}-${idx}`} hover>
+                      <TableCell>{(currentPage - 1) * rowsPerPage + idx + 1}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {book.title}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">{book.author}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip label={book.category || 'General'} size="small" variant="outlined" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {totalPages > 1 && (
+              <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'flex-end' }}>
+                <Pagination
+                  size="small"
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={(_event, value) => setPage(value)}
                 />
-              </ListItem>
-            ))}
-          </List>
+              </Box>
+            )}
+          </Box>
         )}
       </CardContent>
     </Card>
@@ -229,7 +312,12 @@ export const RecentlyAddedCard = () => {
 
 export const TrendingBooksCard = () => {
   const { data: trending = [], isLoading } = useTrendingBooks();
-  const displayBooks = Array.isArray(trending) ? trending.slice(0, 5) : [];
+  const displayBooks = Array.isArray(trending) ? trending : [];
+  const rowsPerPage = 5;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(displayBooks.length / rowsPerPage));
+  const currentPage = Math.min(page, totalPages);
+  const pagedBooks = displayBooks.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   return (
     <Card sx={{ height: '100%' }}>
@@ -241,21 +329,50 @@ export const TrendingBooksCard = () => {
       <CardContent>
         {isLoading ? (
           <CircularProgress />
+        ) : displayBooks.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            No trending books available.
+          </Typography>
         ) : (
-          <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-            {displayBooks.map((book, idx) => (
-              <ListItem key={idx} sx={{ py: 0.5 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                  <Typography sx={{ minWidth: 24 }}>{idx + 1}</Typography>
-                  <ListItemText
-                    sx={{ ml: 2 }}
-                    primary={<Typography variant="body2" sx={{ fontWeight: 500 }}>{book.title}</Typography>}
-                    secondary={<Typography variant="caption">{book.author}</Typography>}
-                  />
-                </Box>
-              </ListItem>
-            ))}
-          </List>
+          <Box>
+            <TableContainer>
+              <Table size="small" aria-label="trending books table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: 56 }}>#</TableCell>
+                    <TableCell>Title</TableCell>
+                    <TableCell>Author</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {pagedBooks.map((book, idx) => (
+                    <TableRow key={`${book.id || book.title}-${idx}`} hover>
+                      <TableCell>{(currentPage - 1) * rowsPerPage + idx + 1}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {book.title}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">{book.author}</Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {totalPages > 1 && (
+              <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'flex-end' }}>
+                <Pagination
+                  size="small"
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={(_event, value) => setPage(value)}
+                />
+              </Box>
+            )}
+          </Box>
         )}
       </CardContent>
     </Card>
@@ -350,7 +467,7 @@ export const WishlistCard = () => {
             <Typography variant="h4" sx={{ color: 'error.main', fontWeight: 'bold' }}>
               {wishlistCount}
             </Typography>
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Books in your wishlist
             </Typography>
           </Box>
@@ -362,7 +479,15 @@ export const WishlistCard = () => {
 
 export const RecentActivityCard = () => {
   const { data: activities = [], isLoading } = useRecentActivity();
-  const displayActivities = Array.isArray(activities) ? activities.slice(0, 6) : [];
+  const displayActivities = Array.isArray(activities) ? activities : [];
+  const rowsPerPage = 5;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(displayActivities.length / rowsPerPage));
+  const currentPage = Math.min(page, totalPages);
+  const pagedActivities = displayActivities.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
 
   return (
     <Card sx={{ height: '100%' }}>
@@ -375,22 +500,47 @@ export const RecentActivityCard = () => {
         {isLoading ? (
           <CircularProgress />
         ) : displayActivities.length > 0 ? (
-          <List sx={{ maxHeight: 350, overflow: 'auto' }}>
-            {displayActivities.map((activity, idx) => (
-              <ListItem key={idx} sx={{ py: 0.75 }}>
-                <ListItemText
-                  primary={<Typography variant="body2">{activity.title}</Typography>}
-                  secondary={
-                    <Typography variant="caption">
-                      {new Date(activity.date).toLocaleDateString()}
-                    </Typography>
-                  }
+          <Box>
+            <TableContainer>
+              <Table size="small" aria-label="recent activity table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: 56 }}>#</TableCell>
+                    <TableCell>Activity</TableCell>
+                    <TableCell sx={{ width: 120 }}>Date</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {pagedActivities.map((activity, idx) => (
+                    <TableRow key={`${activity.type}-${activity.date}-${idx}`} hover>
+                      <TableCell>{(currentPage - 1) * rowsPerPage + idx + 1}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2">{activity.title}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {new Date(activity.date).toLocaleDateString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {totalPages > 1 && (
+              <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'flex-end' }}>
+                <Pagination
+                  size="small"
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={(_event, value) => setPage(value)}
                 />
-              </ListItem>
-            ))}
-          </List>
+              </Box>
+            )}
+          </Box>
         ) : (
-          <Typography variant="body2" color="textSecondary">
+          <Typography variant="body2" color="text.secondary">
             No recent activity
           </Typography>
         )}

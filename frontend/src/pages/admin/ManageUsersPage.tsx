@@ -1,4 +1,5 @@
 import {
+  alpha,
   Container,
   Paper,
   Table,
@@ -23,7 +24,9 @@ import {
   MenuItem,
   Select,
   FormControl,
-  InputLabel
+  InputLabel,
+  Chip,
+  Stack
 } from '@mui/material';
 import { useState } from 'react';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -101,30 +104,58 @@ export const ManageUsersPage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-          Manage Users
-        </Typography>
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Filter by Role</InputLabel>
-          <Select
-            value={roleFilter || ''}
-            onChange={(e) => setRoleFilter(e.target.value || undefined)}
-            label="Filter by Role"
-          >
-            <MenuItem value="">All Roles</MenuItem>
-            <MenuItem value="EMPLOYEE">Employee</MenuItem>
-            <MenuItem value="ADMIN">Admin</MenuItem>
-            <MenuItem value="SUPER_ADMIN">Super Admin</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
+    <Container maxWidth="xl" sx={{ py: { xs: 2.5, md: 4 } }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2.5, md: 3 },
+          mb: 3,
+          borderRadius: '12px',
+          border: '1px solid',
+          borderColor: 'divider',
+          background: (theme) =>
+            theme.palette.mode === 'dark'
+              ? `linear-gradient(120deg, ${alpha(theme.palette.primary.dark, 0.24)} 0%, ${alpha(theme.palette.background.paper, 0.94)} 100%)`
+              : `linear-gradient(120deg, ${alpha(theme.palette.primary.light, 0.24)} 0%, ${alpha('#ffffff', 0.97)} 100%)`
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          justifyContent='space-between'
+          alignItems={{ xs: 'flex-start', md: 'center' }}
+          spacing={2}
+          sx={{ width: '100%' }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              Manage Users
+            </Typography>
+            <Typography variant='body2' color='text.secondary' sx={{ mt: 0.75 }}>
+              Control roles and access levels for your organization.
+            </Typography>
+          </Box>
+          <Box sx={{ ml: { md: 'auto' }, width: { xs: '100%', md: 'auto' }, alignSelf: { xs: 'stretch', md: 'center' } }}>
+            <FormControl sx={{ minWidth: 220, width: { xs: '100%', md: 220 } }}>
+              <InputLabel>Filter by Role</InputLabel>
+              <Select
+                value={roleFilter || ''}
+                onChange={(e) => setRoleFilter(e.target.value || undefined)}
+                label="Filter by Role"
+              >
+                <MenuItem value="">All Roles</MenuItem>
+                <MenuItem value="EMPLOYEE">Employee</MenuItem>
+                <MenuItem value="ADMIN">Admin</MenuItem>
+                <MenuItem value="SUPER_ADMIN">Super Admin</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </Stack>
+      </Paper>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} elevation={0} sx={{ borderRadius: '12px', border: '1px solid', borderColor: 'divider' }}>
         <Table>
           <TableHead>
-            <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+            <TableRow sx={{ backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08) }}>
               <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Role</TableCell>
@@ -141,28 +172,12 @@ export const ManageUsersPage = () => {
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    <Box
-                      sx={{
-                        display: 'inline-block',
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 1,
-                        backgroundColor:
-                          user.role === 'SUPER_ADMIN'
-                            ? '#d4edda'
-                            : user.role === 'ADMIN'
-                              ? '#cce5ff'
-                              : '#e7e7e7',
-                        color:
-                          user.role === 'SUPER_ADMIN'
-                            ? '#155724'
-                            : user.role === 'ADMIN'
-                              ? '#004085'
-                              : '#383d41'
-                      }}
-                    >
-                      {user.role}
-                    </Box>
+                    <Chip
+                      size='small'
+                      variant='outlined'
+                      color={user.role === 'SUPER_ADMIN' ? 'success' : user.role === 'ADMIN' ? 'primary' : 'default'}
+                      label={user.role}
+                    />
                   </TableCell>
                   <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell align="right">
@@ -187,8 +202,13 @@ export const ManageUsersPage = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  No users found
+                <TableCell colSpan={5} align="center" sx={{ py: 5 }}>
+                  <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
+                    No users found
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    No matching users for the current role filter.
+                  </Typography>
                 </TableCell>
               </TableRow>
             )}

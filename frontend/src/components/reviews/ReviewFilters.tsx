@@ -19,7 +19,7 @@ export const ReviewFilters = ({
   onSearchChange
 }: ReviewFiltersProps) => {
   return (
-    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 3 }}>
+    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
       <TextField
         select
         label="Sort By"

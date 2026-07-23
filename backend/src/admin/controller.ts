@@ -213,6 +213,10 @@ export const returnBorrow = asyncHandler(async (req: Request, res: Response) => 
     throw new AppError('Borrow request not found', 404);
   }
 
+  if (borrow.status !== 'BORROWED') {
+    throw new AppError(`Book must be borrowed before return. Current status: ${borrow.status}`, 400);
+  }
+
   const updated = await prisma.borrow.update({
     where: { id },
     data: {
@@ -225,6 +229,48 @@ export const returnBorrow = asyncHandler(async (req: Request, res: Response) => 
   res.json({
     success: true,
     message: 'Book returned successfully',
+    data: updated
+  });
+});
+
+export const markBorrowed = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const borrow = await prisma.borrow.findUnique({ where: { id } });
+
+  if (!borrow) {
+    throw new AppError('Borrow request not found', 404);
+  }
+
+  if (borrow.status !== 'APPROVED') {
+    throw new AppError(`Borrow must be approved before mark as borrowed. Current status: ${borrow.status}`, 400);
+  }
+
+  const book = await prisma.book.findUnique({ where: { id: borrow.bookId } });
+  if (!book) {
+    throw new AppError('Book not found', 404);
+  }
+  if (book.availableQuantity <= 0) {
+    throw new AppError('Book is not available for borrow', 400);
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const updatedBorrow = await tx.borrow.update({
+      where: { id },
+      data: { status: 'BORROWED' },
+      include: { user: true, book: true }
+    });
+
+    await tx.book.update({
+      where: { id: borrow.bookId },
+      data: { availableQuantity: { decrement: 1 } }
+    });
+
+    return updatedBorrow;
+  });
+
+  res.json({
+    success: true,
+    message: 'Borrow marked as borrowed',
     data: updated
   });
 });
@@ -294,10 +340,43 @@ export const markReservationReady = asyncHandler(async (req: Request, res: Respo
     throw new AppError('Reservation not found', 404);
   }
 
-  const updated = await prisma.reservation.update({
-    where: { id },
-    data: { status: 'READY' },
-    include: { user: true, book: true }
+  if (reservation.status !== 'PENDING') {
+    throw new AppError(`Only pending reservations can be marked ready. Current status: ${reservation.status}`, 400);
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const book = await tx.book.findUnique({
+      where: { id: reservation.bookId },
+      select: {
+        id: true,
+        quantity: true,
+        availableQuantity: true,
+        status: true
+      }
+    });
+
+    if (!book) {
+      throw new AppError('Book not found for this reservation', 404);
+    }
+
+    const nextAvailableQuantity = Math.min(book.availableQuantity + 1, book.quantity);
+    const nextBookStatus = nextAvailableQuantity > 0 && book.status === 'OUT_OF_STOCK'
+      ? 'AVAILABLE'
+      : book.status;
+
+    await tx.book.update({
+      where: { id: reservation.bookId },
+      data: {
+        availableQuantity: nextAvailableQuantity,
+        status: nextBookStatus
+      }
+    });
+
+    return tx.reservation.update({
+      where: { id },
+      data: { status: 'READY' },
+      include: { user: true, book: true }
+    });
   });
 
   await NotificationService.notifyReservationReady(updated);
@@ -318,6 +397,7 @@ export const getAdminReviews = asyncHandler(async (req: Request, res: Response) 
     search: typeof req.query.search === 'string' ? req.query.search : undefined,
     bookId: typeof req.query.bookId === 'string' ? req.query.bookId : undefined,
     userId: typeof req.query.userId === 'string' ? req.query.userId : undefined,
+    userName: typeof req.query.userName === 'string' ? req.query.userName : undefined,
     reportedOnly: req.query.reportedOnly === 'true'
   };
 

@@ -169,6 +169,8 @@ export const useRequestBorrow = () => {
     mutationFn: (bookId: string) => borrowReservationApi.requestBorrow(bookId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: borrowKeys.active() });
+      queryClient.invalidateQueries({ queryKey: borrowKeys.history() });
+      queryClient.invalidateQueries({ queryKey: ['userBorrows'] });
     },
   });
 };
@@ -197,6 +199,7 @@ export const useConfirmBorrow = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: borrowKeys.active() });
       queryClient.invalidateQueries({ queryKey: borrowKeys.history() });
+      queryClient.invalidateQueries({ queryKey: ['userBorrows'] });
     },
   });
 };
@@ -209,6 +212,7 @@ export const useReturnBook = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: borrowKeys.active() });
       queryClient.invalidateQueries({ queryKey: borrowKeys.history() });
+      queryClient.invalidateQueries({ queryKey: ['userBorrows'] });
     },
   });
 };

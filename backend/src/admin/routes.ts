@@ -10,6 +10,7 @@ import {
   getBorrowRequests,
   approveBorrow,
   rejectBorrow,
+  markBorrowed,
   returnBorrow,
   getReservations,
   cancelReservation,
@@ -48,6 +49,7 @@ adminRouter.delete('/users/:id', deleteUser);
 adminRouter.get('/borrows', getBorrowRequests);
 adminRouter.post('/borrows/:id/approve', approveBorrow);
 adminRouter.post('/borrows/:id/reject', rejectBorrow);
+adminRouter.post('/borrows/:id/borrow', markBorrowed);
 adminRouter.post('/borrows/:id/return', returnBorrow);
 
 // Reservations management

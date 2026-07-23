@@ -23,7 +23,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { useBook, useUploadCover, useGenerateQRCode, useRemoveCover } from '../hooks/useBooks';
 import { useAuth } from '../hooks/useAuth';
-import { useRequestBorrow, useReserveBook, useActiveBorrows } from '../hooks/useBorrowReservation';
+import { useRequestBorrow, useReserveBook, useActiveBorrows, useUserReservations } from '../hooks/useBorrowReservation';
 import { useAddToWishlist, useIsInWishlist, useRemoveFromWishlist } from '../hooks/useWishlist';
 import { useNotification } from '../context/NotificationContext';
 import { useState } from 'react';
@@ -42,6 +42,7 @@ export const BookDetailsPage = () => {
   const { mutate: requestBorrow, isPending: isBorrowing } = useRequestBorrow();
   const { mutate: reserveBook, isPending: isReserving } = useReserveBook();
   const { data: activeBorrows = [] } = useActiveBorrows();
+  const { data: userReservations = [], isLoading: isReservationsLoading } = useUserReservations();
   const { data: isInWishlist = false, isLoading: isWishlistLoading } = useIsInWishlist(id || '');
   const { mutate: addToWishlist, isPending: isAddingToWishlist } = useAddToWishlist();
   const { mutate: removeFromWishlist, isPending: isRemovingFromWishlist } = useRemoveFromWishlist();
@@ -51,6 +52,11 @@ export const BookDetailsPage = () => {
 
   const currentBorrow = activeBorrows.find((borrow) => borrow.bookId === id);
   const currentBorrowStatus = currentBorrow?.status;
+  const currentReservation = userReservations.find((reservation) => reservation.bookId === id);
+  const currentReservationStatus = currentReservation?.status;
+  const hasBlockingReservation =
+    currentReservationStatus === 'PENDING' ||
+    (currentReservationStatus === 'READY' && (book?.availableQuantity ?? 0) <= 0);
 
   const getBorrowButtonLabel = (): string => {
     switch (currentBorrowStatus) {
@@ -64,6 +70,17 @@ export const BookDetailsPage = () => {
         return 'Borrow Overdue';
       default:
         return 'Borrow Book';
+    }
+  };
+
+  const getReservationButtonLabel = (): string => {
+    switch (currentReservationStatus) {
+      case 'PENDING':
+        return 'Reservation Pending';
+      case 'READY':
+        return 'Reservation Ready';
+      default:
+        return 'Reserve Book';
     }
   };
 
@@ -355,6 +372,16 @@ export const BookDetailsPage = () => {
                       >
                         {getBorrowButtonLabel()}
                       </Button>
+                    ) : hasBlockingReservation ? (
+                      <Button
+                        variant='outlined'
+                        color='primary'
+                        startIcon={<BookmarkIcon />}
+                        disabled
+                        fullWidth
+                      >
+                        {getReservationButtonLabel()}
+                      </Button>
                     ) : book.availableQuantity > 0 ? (
                       <Button
                         variant='contained'
@@ -372,10 +399,10 @@ export const BookDetailsPage = () => {
                         color='primary'
                         startIcon={<BookmarkIcon />}
                         onClick={handleReserve}
-                        disabled={isReserving}
+                        disabled={isReserving || isReservationsLoading}
                         fullWidth
                       >
-                        Reserve Book
+                        {isReservationsLoading ? 'Checking reservation...' : 'Reserve Book'}
                       </Button>
                     )}
                     <Button

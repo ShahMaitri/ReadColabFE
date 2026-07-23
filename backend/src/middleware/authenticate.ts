@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService, TokenPayload } from '../auth';
 import { AppError } from '../utils/appError';
-import { UserRole } from '@prisma/client';
 
 declare global {
   namespace Express {

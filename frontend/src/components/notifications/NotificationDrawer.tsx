@@ -2,6 +2,8 @@ import DoneAllIcon from '@mui/icons-material/DoneAll';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import {
+  alpha,
+  Chip,
   Box,
   Button,
   Divider,
@@ -10,9 +12,11 @@ import {
   List,
   ListItem,
   ListItemText,
+  Stack,
   Typography
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import { notificationService } from '../../services/notification.service';
 
 interface NotificationDrawerProps {
@@ -27,6 +31,7 @@ const notificationKeys = {
 };
 
 export const NotificationDrawer = ({ open, onClose }: NotificationDrawerProps) => {
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -50,6 +55,11 @@ export const NotificationDrawer = ({ open, onClose }: NotificationDrawerProps) =
       queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount() });
     }
   });
+
+  const notifications = useMemo(() => {
+    const rows = data?.data || [];
+    return showUnreadOnly ? rows.filter((item) => !item.isRead) : rows;
+  }, [data?.data, showUnreadOnly]);
 
   return (
     <Drawer anchor='right' open={open} onClose={onClose}>
@@ -76,14 +86,35 @@ export const NotificationDrawer = ({ open, onClose }: NotificationDrawerProps) =
 
         <Divider />
 
+        <Stack direction='row' spacing={1} sx={{ px: 2, py: 1.25 }}>
+          <Chip
+            size='small'
+            clickable
+            color={!showUnreadOnly ? 'primary' : 'default'}
+            variant={!showUnreadOnly ? 'filled' : 'outlined'}
+            label='All'
+            onClick={() => setShowUnreadOnly(false)}
+          />
+          <Chip
+            size='small'
+            clickable
+            color={showUnreadOnly ? 'primary' : 'default'}
+            variant={showUnreadOnly ? 'filled' : 'outlined'}
+            label='Unread'
+            onClick={() => setShowUnreadOnly(true)}
+          />
+        </Stack>
+
+        <Divider />
+
         <Box sx={{ flex: 1, overflowY: 'auto' }}>
           {isLoading ? (
             <Typography variant='body2' color='text.secondary' sx={{ p: 2 }}>
               Loading notifications...
             </Typography>
-          ) : data?.data.length ? (
+          ) : notifications.length ? (
             <List disablePadding>
-              {data.data.map((notification) => (
+              {notifications.map((notification) => (
                 <Box key={notification.id}>
                   <ListItem
                     secondaryAction={
@@ -100,7 +131,9 @@ export const NotificationDrawer = ({ open, onClose }: NotificationDrawerProps) =
                     }
                     sx={{
                       alignItems: 'flex-start',
-                      bgcolor: notification.isRead ? 'transparent' : 'action.hover'
+                      bgcolor: notification.isRead
+                        ? 'transparent'
+                        : (theme) => alpha(theme.palette.primary.main, 0.08)
                     }}
                   >
                     <ListItemText
@@ -128,8 +161,11 @@ export const NotificationDrawer = ({ open, onClose }: NotificationDrawerProps) =
           ) : (
             <Box sx={{ p: 3, textAlign: 'center' }}>
               <NotificationsNoneIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
-              <Typography variant='body2' color='text.secondary'>
-                You are all caught up.
+              <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 600 }}>
+                You are all caught up
+              </Typography>
+              <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5, display: 'block' }}>
+                New updates will appear here automatically.
               </Typography>
             </Box>
           )}

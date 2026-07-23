@@ -66,14 +66,34 @@ export class AIConfig {
    * Create GitHub Models Provider
    */
   private static createGitHubProvider(): AIProvider {
-    const token = process.env.GITHUB_MODELS_API_KEY;
-    const model = process.env.GITHUB_MODELS_MODEL || 'gpt-4';
+    const token = this.resolveGitHubToken();
+    const model = process.env.GITHUB_MODELS_MODEL || process.env.GITHUB_MODEL || 'gpt-4';
 
     if (!token) {
-      logger.warn('GITHUB_MODELS_API_KEY not set. Using mock responses.');
+      logger.warn(
+        'No GitHub AI token found (checked: GITHUB_MODELS_API_KEY, GITHUB_TOKEN, GH_TOKEN, GITHUB_PAT). Using mock responses.'
+      );
     }
 
     return new GitHubModelsProvider(token, model);
+  }
+
+  /**
+   * Resolve GitHub token from supported environment variable names
+   */
+  private static resolveGitHubToken(): string | undefined {
+    const candidates = [
+      process.env.GITHUB_MODELS_API_KEY,
+      process.env.GITHUB_TOKEN,
+      process.env.GH_TOKEN,
+      process.env.GITHUB_PAT
+    ];
+
+    const token = candidates.find(
+      (value): value is string => typeof value === 'string' && value.trim().length > 0
+    );
+
+    return token?.trim();
   }
 
   /**

@@ -1,5 +1,6 @@
 import { Outlet, Link as RouterLink, useLocation } from 'react-router-dom';
 import {
+  alpha,
   Box,
   Drawer,
   AppBar,
@@ -18,13 +19,30 @@ import { useState } from 'react';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import BookIcon from '@mui/icons-material/Book';
 import PeopleIcon from '@mui/icons-material/People';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import BookmarkIconOutlined from '@mui/icons-material/BookmarkBorder';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const DRAWER_WIDTH = 240;
+const HEADER_HEIGHT = 72;
+
+const navItemSx = {
+  borderRadius: 2,
+  mx: 1,
+  mb: 0.5,
+  '&.Mui-selected': {
+    bgcolor: 'primary.main',
+    color: 'primary.contrastText',
+    '& .MuiListItemIcon-root': {
+      color: 'primary.contrastText'
+    },
+    '&:hover': {
+      bgcolor: 'primary.main'
+    }
+  }
+};
 
 export const AdminLayout = () => {
   const location = useLocation();
@@ -34,10 +52,10 @@ export const AdminLayout = () => {
 
   const menuItems = [
     { label: 'Dashboard', path: '/admin', icon: <DashboardIcon /> },
-    { label: 'Manage Books', path: '/admin/books', icon: <BookIcon /> },
     { label: 'Manage Users', path: '/admin/users', icon: <PeopleIcon /> },
     { label: 'Borrow Requests', path: '/admin/borrows', icon: <LibraryBooksIcon /> },
-    { label: 'Reservations', path: '/admin/reservations', icon: <EventNoteIcon /> }
+    { label: 'Reservations', path: '/admin/reservations', icon: <BookmarkIconOutlined /> },
+    { label: 'Reviews', path: '/admin/reviews', icon: <EventNoteIcon /> }
   ];
 
   const isActive = (path: string) => {
@@ -45,13 +63,25 @@ export const AdminLayout = () => {
   };
 
   const drawer = (
-    <Box>
-      <Box sx={{ p: 2, backgroundColor: 'primary.main', color: 'white' }}>
-        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+    <Box sx={{ height: '100%' }}>
+      <Box
+        sx={{
+          p: 2.25,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          background:
+            theme.palette.mode === 'dark'
+              ? `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.34)} 0%, ${alpha(theme.palette.background.paper, 0.96)} 100%)`
+              : `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.26)} 0%, ${alpha('#ffffff', 0.96)} 100%)`
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 800 }}>
           Admin Panel
         </Typography>
+        <Typography variant='caption' color='text.secondary'>
+          Manage operations and workflows
+        </Typography>
       </Box>
-      <Divider />
       <List>
         {menuItems.map((item) => (
           <ListItem key={item.path} disablePadding>
@@ -59,15 +89,7 @@ export const AdminLayout = () => {
               component={RouterLink}
               to={item.path}
               selected={isActive(item.path)}
-              sx={{
-                backgroundColor: isActive(item.path) ? 'action.selected' : 'transparent',
-                '&.Mui-selected': {
-                  backgroundColor: 'action.selected',
-                  '&:hover': {
-                    backgroundColor: 'action.selected'
-                  }
-                }
-              }}
+              sx={navItemSx}
               onClick={() => isMobile && setMobileOpen(false)}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
@@ -76,12 +98,13 @@ export const AdminLayout = () => {
           </ListItem>
         ))}
       </List>
-      <Divider sx={{ my: 2 }} />
+      <Divider sx={{ my: 1.5 }} />
       <Box sx={{ p: 2 }}>
         <ListItem disablePadding>
           <ListItemButton
             component={RouterLink}
             to="/"
+            sx={{ borderRadius: 2 }}
             onClick={() => isMobile && setMobileOpen(false)}
           >
             <ListItemIcon>
@@ -95,17 +118,38 @@ export const AdminLayout = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+        backgroundImage:
+          theme.palette.mode === 'dark'
+            ? 'radial-gradient(1200px 520px at 100% -10%, rgba(118,210,207,0.10), transparent 40%), radial-gradient(900px 420px at 0% 100%, rgba(154,182,218,0.08), transparent 35%)'
+            : 'radial-gradient(1200px 520px at 100% -10%, rgba(11,110,109,0.10), transparent 40%), radial-gradient(900px 420px at 0% 100%, rgba(59,83,112,0.08), transparent 35%)'
+      }}
+    >
       {/* AppBar */}
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
+      <AppBar
+        position="fixed"
+        color='transparent'
+        elevation={0}
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.78)
+        }}
+      >
+        <Toolbar sx={{ minHeight: `${HEADER_HEIGHT}px !important` }}>
           {isMobile && (
             <MenuIcon
               sx={{ mr: 2, cursor: 'pointer' }}
               onClick={() => setMobileOpen(true)}
             />
           )}
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 800 }}>
             Admin Dashboard
           </Typography>
         </Toolbar>
@@ -121,7 +165,10 @@ export const AdminLayout = () => {
             '& .MuiDrawer-paper': {
               width: DRAWER_WIDTH,
               boxSizing: 'border-box',
-              mt: 8
+              mt: `${HEADER_HEIGHT}px`,
+              borderRight: '1px solid',
+              borderColor: 'divider',
+              backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.96)
             }
           }}
         >
@@ -156,9 +203,9 @@ export const AdminLayout = () => {
       <Box
         sx={{
           flexGrow: 1,
-          p: 3,
-          mt: 8,
-          backgroundColor: '#f5f5f5',
+          px: { xs: 2, md: 3 },
+          py: 3,
+          mt: `${HEADER_HEIGHT}px`,
           minHeight: '100vh'
         }}
       >

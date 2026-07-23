@@ -4,20 +4,21 @@ import {
   Button,
   Card,
   CardContent,
+  Container,
   Stack,
   TextField,
   CircularProgress,
-  Alert,
   FormControl,
   InputLabel,
   Select,
   MenuItem
 } from '@mui/material';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCreateBook, useUpdateBook, useBook, useCategories } from '../hooks/useBooks';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useEffect } from 'react';
 
 const bookFormSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255),
@@ -26,7 +27,7 @@ const bookFormSchema = z.object({
   description: z.string().max(2000).optional(),
   publicationDate: z.string().optional(),
   category: z.string().optional(),
-  quantity: z.number().int().min(1).default(1)
+  quantity: z.number().int().min(1)
 });
 
 type BookFormValues = z.infer<typeof bookFormSchema>;
@@ -44,13 +45,37 @@ export const CreateEditBookPage = () => {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
-    reset,
-    watch
+    reset
   } = useForm<BookFormValues>({
     resolver: zodResolver(bookFormSchema),
-    defaultValues: isEditMode && book ? book : { quantity: 1 }
+    defaultValues: {
+      title: '',
+      author: '',
+      isbn: '',
+      description: '',
+      publicationDate: '',
+      category: '',
+      quantity: 1
+    }
   });
+
+  useEffect(() => {
+    if (isEditMode && book) {
+      reset({
+        title: book.title ?? '',
+        author: book.author ?? '',
+        isbn: book.isbn ?? '',
+        description: book.description ?? '',
+        publicationDate: book.publicationDate
+          ? new Date(book.publicationDate).toISOString().slice(0, 10)
+          : '',
+        category: book.category ?? '',
+        quantity: book.quantity ?? 1
+      });
+    }
+  }, [isEditMode, book, reset]);
 
   if (isEditMode && bookLoading) {
     return (
@@ -61,9 +86,19 @@ export const CreateEditBookPage = () => {
   }
 
   const onSubmit = (data: BookFormValues) => {
+    const normalizedData: BookFormValues = {
+      ...data,
+      isbn: data.isbn?.trim() || undefined,
+      description: data.description?.trim() || undefined,
+      category: data.category && data.category !== 'new' ? data.category.trim() : undefined,
+      publicationDate: data.publicationDate
+        ? new Date(`${data.publicationDate}T00:00:00.000Z`).toISOString()
+        : undefined
+    };
+
     if (isEditMode && id) {
       updateBook(
-        { id, data },
+        { id, data: normalizedData },
         {
           onSuccess: () => {
             navigate('/books');
@@ -71,7 +106,7 @@ export const CreateEditBookPage = () => {
         }
       );
     } else {
-      createBook(data, {
+      createBook(normalizedData, {
         onSuccess: () => {
           navigate('/books');
         }
@@ -80,7 +115,7 @@ export const CreateEditBookPage = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Container maxWidth='md' sx={{ py: { xs: 2, md: 3 }, pb: { xs: 10, md: 6 } }}>
       <Button
         startIcon={<ArrowBackIcon />}
         onClick={() => navigate('/books')}
@@ -137,32 +172,51 @@ export const CreateEditBookPage = () => {
               disabled={isCreating || isUpdating}
             />
 
-            <TextField
-              label='Publication Date'
-              type='date'
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              error={!!errors.publicationDate}
-              helperText={errors.publicationDate?.message}
-              {...register('publicationDate')}
-              disabled={isCreating || isUpdating}
+            <Controller
+              name='publicationDate'
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  label='Publication Date'
+                  type='date'
+                  fullWidth
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  inputRef={field.ref}
+                  error={!!errors.publicationDate}
+                  helperText={errors.publicationDate?.message}
+                  disabled={isCreating || isUpdating}
+                  slotProps={{
+                    inputLabel: { shrink: true }
+                  }}
+                />
+              )}
             />
 
-            <FormControl fullWidth>
+            <FormControl fullWidth error={!!errors.category}>
               <InputLabel>Category</InputLabel>
-              <Select
-                {...register('category')}
-                label='Category'
-                disabled={isCreating || isUpdating}
-              >
-                <MenuItem value=''>Select Category</MenuItem>
-                {categories?.map((cat) => (
-                  <MenuItem key={cat} value={cat}>
-                    {cat}
-                  </MenuItem>
-                ))}
-                <MenuItem value='new'>+ Add New Category</MenuItem>
-              </Select>
+              <Controller
+                name='category'
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    value={field.value ?? ''}
+                    label='Category'
+                    disabled={isCreating || isUpdating}
+                  >
+                    <MenuItem value=''>Select Category</MenuItem>
+                    {categories?.map((cat) => (
+                      <MenuItem key={cat} value={cat}>
+                        {cat}
+                      </MenuItem>
+                    ))}
+                    <MenuItem value='new'>+ Add New Category</MenuItem>
+                  </Select>
+                )}
+              />
             </FormControl>
 
             <TextField
@@ -195,6 +249,6 @@ export const CreateEditBookPage = () => {
           </Stack>
         </CardContent>
       </Card>
-    </Box>
+    </Container>
   );
 };

@@ -1,4 +1,5 @@
 import {
+  alpha,
   Container,
   Paper,
   Table,
@@ -20,8 +21,11 @@ import {
   Typography,
   IconButton,
   Menu,
-  MenuItem
+  MenuItem,
+  Chip,
+  Stack
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { useState } from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -104,15 +108,48 @@ export const ManageBooksPage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" sx={{ mb: 4, fontWeight: 'bold' }}>
-        Manage Books
-      </Typography>
+    <Container maxWidth="xl" sx={{ py: { xs: 2.5, md: 4 } }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2.5, md: 3 },
+          mb: 3,
+          borderRadius: '12px',
+          border: '1px solid',
+          borderColor: 'divider',
+          background: (theme) =>
+            theme.palette.mode === 'dark'
+              ? `linear-gradient(120deg, ${alpha(theme.palette.primary.dark, 0.24)} 0%, ${alpha(theme.palette.background.paper, 0.94)} 100%)`
+              : `linear-gradient(120deg, ${alpha(theme.palette.primary.light, 0.24)} 0%, ${alpha('#ffffff', 0.97)} 100%)`
+        }}
+      >
+        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' spacing={1.5}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              Manage Books
+            </Typography>
+            <Typography variant='body2' color='text.secondary' sx={{ mt: 0.75 }}>
+              Edit inventory metadata, statuses, and lifecycle actions.
+            </Typography>
+          </Box>
+          <Stack direction='row' spacing={1.25} sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}>
+            <Chip label={`${data?.total || 0} records`} variant='outlined' />
+            <Button
+              component={RouterLink}
+              to='/books/create'
+              variant='contained'
+              size='small'
+            >
+              Add Book
+            </Button>
+          </Stack>
+        </Stack>
+      </Paper>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} elevation={0} sx={{ borderRadius: '12px', border: '1px solid', borderColor: 'divider' }}>
         <Table>
           <TableHead>
-            <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+            <TableRow sx={{ backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08) }}>
               <TableCell sx={{ fontWeight: 'bold' }}>Title</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Author</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Category</TableCell>
@@ -131,28 +168,12 @@ export const ManageBooksPage = () => {
                   <TableCell>{book.author}</TableCell>
                   <TableCell>{book.category || '-'}</TableCell>
                   <TableCell>
-                    <Box
-                      sx={{
-                        display: 'inline-block',
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 1,
-                        backgroundColor:
-                          book.status === 'AVAILABLE'
-                            ? '#d4edda'
-                            : book.status === 'OUT_OF_STOCK'
-                              ? '#f8d7da'
-                              : '#e2e3e5',
-                        color:
-                          book.status === 'AVAILABLE'
-                            ? '#155724'
-                            : book.status === 'OUT_OF_STOCK'
-                              ? '#721c24'
-                              : '#383d41'
-                      }}
-                    >
-                      {book.status}
-                    </Box>
+                    <Chip
+                      size='small'
+                      variant='outlined'
+                      color={book.status === 'AVAILABLE' ? 'success' : book.status === 'OUT_OF_STOCK' ? 'error' : 'default'}
+                      label={book.status}
+                    />
                   </TableCell>
                   <TableCell>{book.quantity}</TableCell>
                   <TableCell align="right">
@@ -177,8 +198,13 @@ export const ManageBooksPage = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No books found
+                <TableCell colSpan={6} align="center" sx={{ py: 5 }}>
+                  <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
+                    No books found
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    No inventory records are available for this page.
+                  </Typography>
                 </TableCell>
               </TableRow>
             )}

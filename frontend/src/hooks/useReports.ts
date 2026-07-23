@@ -112,7 +112,10 @@ export const downloadReport = async (
     responseType: 'blob'
   });
 
-  const contentType = response.headers['content-type'] || 'application/octet-stream';
+  const contentTypeHeader = response.headers['content-type'];
+  const contentType = typeof contentTypeHeader === 'string'
+    ? contentTypeHeader
+    : 'application/octet-stream';
   const blob = new Blob([response.data], { type: contentType });
   const downloadUrl = window.URL.createObjectURL(blob);
   const link = document.createElement('a');

@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { BookStatus } from '@prisma/client';
 
 export const createBookSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255),
@@ -21,7 +20,7 @@ export const updateBookSchema = z.object({
   category: z.string().max(100).optional(),
   quantity: z.number().int().min(1).optional(),
   availableQuantity: z.number().int().min(0).optional(),
-  status: z.nativeEnum(BookStatus).optional()
+  status: z.enum(['AVAILABLE', 'ARCHIVED', 'OUT_OF_STOCK']).optional()
 });
 
 export const getBooksQuerySchema = z.object({

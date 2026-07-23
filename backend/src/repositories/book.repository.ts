@@ -1,5 +1,7 @@
 import { prisma } from '../config/prisma';
-import { Book, BookStatus } from '@prisma/client';
+import { Book } from '@prisma/client';
+
+type BookStatus = 'AVAILABLE' | 'ARCHIVED' | 'OUT_OF_STOCK';
 
 export interface CreateBookInput {
   title: string;

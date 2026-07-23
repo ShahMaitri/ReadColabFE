@@ -1,4 +1,5 @@
 import {
+  alpha,
   Box,
   Card,
   CircularProgress,
@@ -17,13 +18,16 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Paper,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import { useActiveBorrows, useReturnBook, useConfirmBorrow } from '../hooks/useBorrowReservation';
 import { useState } from 'react';
+import { useTheme } from '@mui/material/styles';
 
 export const MyBooksPage = () => {
+  const theme = useTheme();
   const { data: borrows = [], isLoading, error } = useActiveBorrows();
   const returnMutation = useReturnBook();
   const confirmMutation = useConfirmBorrow();
@@ -49,10 +53,10 @@ export const MyBooksPage = () => {
   if (borrows.length === 0) {
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
-        <Typography variant="h6" color="textSecondary">
+        <Typography variant="h6" color="text.secondary">
           No active borrows
         </Typography>
-        <Typography variant="body2" color="textSecondary">
+        <Typography variant="body2" color="text.secondary">
           Visit the Books section to borrow a book
         </Typography>
       </Box>
@@ -124,15 +128,38 @@ export const MyBooksPage = () => {
   };
 
   return (
-    <Box>
-      <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-        My Books
-      </Typography>
+    <Box sx={{ p: 3 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2, md: 2.5 },
+          mb: 3,
+          borderRadius: '12px',
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+          background:
+            theme.palette.mode === 'dark'
+              ? `linear-gradient(120deg, ${alpha(theme.palette.primary.dark, 0.24)} 0%, ${alpha(theme.palette.background.paper, 0.94)} 100%)`
+              : `linear-gradient(120deg, ${alpha(theme.palette.primary.light, 0.24)} 0%, ${alpha('#ffffff', 0.97)} 100%)`
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
+          My Books
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Track active borrows, due dates, and quick return actions.
+        </Typography>
+      </Paper>
 
-      <TableContainer component={Card}>
-        <Table>
+      <TableContainer component={Card} sx={{ borderRadius: '12px', border: '1px solid', borderColor: 'divider' }}>
+        <Table
+          sx={{
+            '& tbody .MuiTableCell-root': {
+              py: 1.8
+            }
+          }}
+        >
           <TableHead>
-            <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+            <TableRow>
               <TableCell>Book Title</TableCell>
               <TableCell>Author</TableCell>
               <TableCell>Status</TableCell>

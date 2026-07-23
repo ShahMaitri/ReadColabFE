@@ -36,7 +36,7 @@ export class UserRepository {
     });
   }
 
-  async findAll(): Promise<User[]> {
+  async findAll(): Promise<Array<Pick<User, 'id' | 'email' | 'name' | 'role' | 'avatar' | 'createdAt' | 'updatedAt'>>> {
     return prisma.user.findMany({
       select: {
         id: true,
@@ -46,7 +46,7 @@ export class UserRepository {
         avatar: true,
         createdAt: true,
         updatedAt: true
-      } as any
+      }
     });
   }
 

@@ -1,10 +1,11 @@
 import {
+  alpha,
   Alert,
   Box,
-  Container,
   Pagination,
   Stack,
-  Typography
+  Typography,
+  Paper
 } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
@@ -15,8 +16,10 @@ import { ReviewEmptyState } from '../components/reviews/ReviewEmptyState';
 import { ReviewFilters } from '../components/reviews/ReviewFilters';
 import { ReviewList } from '../components/reviews/ReviewList';
 import { ReviewSkeleton } from '../components/reviews/ReviewSkeleton';
+import { useTheme } from '@mui/material/styles';
 
 export const MyReviewsPage = () => {
+  const theme = useTheme();
   const { user } = useAuth();
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<ReviewSortOption>('newest');
@@ -30,6 +33,8 @@ export const MyReviewsPage = () => {
 
   const reviews = data?.data || [];
   const pagination = data?.pagination;
+  const hasAnyReviews = (pagination?.total ?? 0) > 0;
+  const hasActiveFilters = Boolean(search.trim()) || ratingFilter !== undefined || sortBy !== 'newest';
 
   const currentReviewTitle = useMemo(() => editingReview?.book?.title || 'Review', [editingReview]);
 
@@ -41,56 +46,89 @@ export const MyReviewsPage = () => {
 
   if (error) {
     return (
-      <Container sx={{ py: 4 }}>
+      <Box sx={{ p: 3 }}>
         <Alert severity="error">Failed to load your reviews</Alert>
-      </Container>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Box sx={{ p: 3 }}>
       <Stack spacing={3}>
-        <Box>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2, md: 2.5 },
+            borderRadius: '12px',
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+            background:
+              theme.palette.mode === 'dark'
+                ? `linear-gradient(120deg, ${alpha(theme.palette.primary.dark, 0.24)} 0%, ${alpha(theme.palette.background.paper, 0.94)} 100%)`
+                : `linear-gradient(120deg, ${alpha(theme.palette.primary.light, 0.24)} 0%, ${alpha('#ffffff', 0.97)} 100%)`
+          }}
+        >
           <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
             My Reviews
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Review history for your borrowed and returned books.
           </Typography>
-        </Box>
+        </Paper>
 
-        <ReviewFilters
-          sortBy={sortBy}
-          rating={ratingFilter}
-          search={search}
-          onSortChange={(value) => setSortBy(value)}
-          onRatingChange={(value) => {
-            setRatingFilter(value);
-            setPage(1);
-          }}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(1);
-          }}
-        />
-
-        {isLoading ? (
-          <ReviewSkeleton count={4} />
-        ) : reviews.length > 0 ? (
-          <ReviewList
-            reviews={reviews}
-            currentUserId={user?.id}
-            showBookInfo
-            onEditReview={(review) => {
-              setEditingReview(review);
-              setDialogOpen(true);
-            }}
-            onDeleteReview={handleDelete}
-            emptyState={<ReviewEmptyState title="No reviews yet" />}
-          />
-        ) : (
-          <ReviewEmptyState title="No reviews yet" description="Your submitted reviews will appear here." />
+        {(hasAnyReviews || hasActiveFilters) && (
+          <Paper elevation={0} sx={{ p: 2, borderRadius: '12px', border: '1px solid', borderColor: 'divider' }}>
+            <ReviewFilters
+              sortBy={sortBy}
+              rating={ratingFilter}
+              search={search}
+              onSortChange={(value) => setSortBy(value)}
+              onRatingChange={(value) => {
+                setRatingFilter(value);
+                setPage(1);
+              }}
+              onSearchChange={(value) => {
+                setSearch(value);
+                setPage(1);
+              }}
+            />
+          </Paper>
         )}
+
+        <Paper elevation={0} sx={{ p: 2, borderRadius: '12px', border: '1px solid', borderColor: 'divider' }}>
+          {isLoading ? (
+            <ReviewSkeleton count={4} />
+          ) : reviews.length > 0 ? (
+            <ReviewList
+              reviews={reviews}
+              currentUserId={user?.id}
+              showBookInfo
+              onEditReview={(review) => {
+                setEditingReview(review);
+                setDialogOpen(true);
+              }}
+              onDeleteReview={handleDelete}
+              emptyState={<ReviewEmptyState title="No reviews yet" />}
+            />
+          ) : (
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 3, md: 4 },
+                textAlign: 'center',
+                borderRadius: '12px',
+                border: '1px solid',
+                borderColor: 'divider'
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                No reviews yet
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Your submitted reviews will appear here.
+              </Typography>
+            </Paper>
+          )}
+        </Paper>
 
         {pagination && pagination.pages > 1 && (
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -115,6 +153,6 @@ export const MyReviewsPage = () => {
           }}
         />
       )}
-    </Container>
+    </Box>
   );
 };

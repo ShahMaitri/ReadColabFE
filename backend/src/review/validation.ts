@@ -22,6 +22,7 @@ export const reviewQuerySchema = z.object({
 export const adminReviewQuerySchema = reviewQuerySchema.extend({
   bookId: z.string().trim().optional(),
   userId: z.string().trim().optional(),
+  userName: z.string().trim().optional(),
   reportedOnly: z.coerce.boolean().optional()
 });
 

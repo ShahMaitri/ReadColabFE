@@ -1,4 +1,5 @@
 import {
+  alpha,
   Container,
   Grid,
   Card,
@@ -7,7 +8,15 @@ import {
   Box,
   CircularProgress,
   Alert,
-  Paper
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  Stack
 } from '@mui/material';
 import {
   BarChart,
@@ -37,6 +46,8 @@ import PeopleIcon from '@mui/icons-material/People';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import EventIcon from '@mui/icons-material/Event';
 import WarningIcon from '@mui/icons-material/Warning';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 const COLORS = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
 
@@ -78,6 +89,9 @@ const StatCard = ({
 );
 
 export const AdminDashboard = () => {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMediumDown = useMediaQuery(theme.breakpoints.down('md'));
   const {
     data: dashboardData,
     isLoading: dashboardLoading,
@@ -109,13 +123,85 @@ export const AdminDashboard = () => {
     return null;
   }
 
-  const { stats, mostBorrowed, leastBorrowed, lateReturns, recentActivity } = dashboardData;
+  const { stats, mostBorrowed, leastBorrowed, lateReturns } = dashboardData;
+  const baseChartHeight = isSmallScreen ? 260 : 320;
+  const compactTickFontSize = isSmallScreen ? 10 : 12;
+  const normalizedCategoryStats = (categoryStats ?? []).map((item) => ({
+    ...item,
+    borrowCount: Number(item.borrowCount) || 0
+  }));
+  const topCategoryStats = normalizedCategoryStats.slice(0, 8);
+  const hasCategoryBorrowData = topCategoryStats.some((item) => item.borrowCount > 0);
+  const normalizedLeastBorrowed = (leastBorrowed ?? []).map((item) => ({
+    ...item,
+    borrowCount: Number(item.borrowCount) || 0
+  }));
+  const leastBorrowedChartData = normalizedLeastBorrowed.map((item) => ({
+    ...item,
+    // Ensure zero-count books remain visible in chart while preserving actual value in tooltip.
+    borrowCountChart: item.borrowCount === 0 ? 0.15 : item.borrowCount
+  }));
+  const shortenLabel = (value: string, max = 16) => {
+    if (value.length <= max) {
+      return value;
+    }
+    return `${value.slice(0, max)}...`;
+  };
+  const chartCardSx = {
+    p: { xs: 2, md: 3 },
+    borderRadius: '12px',
+    border: '1px solid',
+    borderColor: 'divider',
+    height: '100%'
+  };
+  const chartContentSx = {
+    height: baseChartHeight,
+    width: '100%'
+  };
+  const chartTooltipStyle = {
+    backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.grey[900], 0.95) : alpha('#ffffff', 0.97),
+    border: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+    borderRadius: 8,
+    color: theme.palette.text.primary
+  };
+  const chartTooltipLabelStyle = {
+    color: theme.palette.text.primary,
+    fontWeight: 600
+  };
+  const chartTooltipItemStyle = {
+    color: theme.palette.text.primary
+  };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" sx={{ mb: 4, fontWeight: 'bold' }}>
-        Admin Dashboard
-      </Typography>
+    <Container maxWidth="xl" sx={{ py: { xs: 2.5, md: 4 } }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2.5, md: 3 },
+          mb: 3,
+          borderRadius: '12px',
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+          background:
+            theme.palette.mode === 'dark'
+              ? `linear-gradient(120deg, ${alpha(theme.palette.primary.dark, 0.26)} 0%, ${alpha(theme.palette.background.paper, 0.94)} 100%)`
+              : `linear-gradient(120deg, ${alpha(theme.palette.primary.light, 0.24)} 0%, ${alpha('#ffffff', 0.96)} 100%)`
+        }}
+      >
+        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' spacing={2}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              Admin Dashboard
+            </Typography>
+            <Typography variant='body2' color='text.secondary' sx={{ mt: 0.75 }}>
+              Operations health, borrowing trends, and user behavior in one view.
+            </Typography>
+          </Box>
+          <Stack direction='row' spacing={1} alignItems='center'>
+            <Chip size='small' variant='outlined' label={`${stats.totalUsers} users`} />
+            <Chip size='small' variant='outlined' label={`${stats.activeLoans} active loans`} />
+          </Stack>
+        </Stack>
+      </Paper>
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -161,135 +247,188 @@ export const AdminDashboard = () => {
       {/* Charts Grid */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {/* Borrow Trend Chart */}
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3 }}>
+        <Grid item xs={12} md={6}>
+          <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Borrow Trend (Last 30 Days)
             </Typography>
-            {borrowTrend && borrowTrend.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={borrowTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 12 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="count" stroke="#3498db" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <Typography color="textSecondary">No data available</Typography>
-            )}
+            <Box sx={chartContentSx}>
+              {borrowTrend && borrowTrend.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={borrowTrend} margin={{ top: 12, right: 16, left: 4, bottom: isSmallScreen ? 16 : 52 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: compactTickFontSize }}
+                      angle={isSmallScreen ? 0 : -35}
+                      textAnchor={isSmallScreen ? 'middle' : 'end'}
+                      height={isSmallScreen ? 30 : 58}
+                      interval={isSmallScreen ? 'preserveStartEnd' : 0}
+                      minTickGap={isSmallScreen ? 22 : 10}
+                    />
+                    <YAxis width={isSmallScreen ? 30 : 42} tick={{ fontSize: compactTickFontSize }} />
+                    <Tooltip
+                      contentStyle={chartTooltipStyle}
+                      labelStyle={chartTooltipLabelStyle}
+                      itemStyle={chartTooltipItemStyle}
+                    />
+                    <Legend />
+                    <Line type="monotone" dataKey="count" stroke="#3498db" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <Box sx={{ height: '100%', display: 'grid', placeItems: 'center' }}>
+                  <Typography color="textSecondary">No data available</Typography>
+                </Box>
+              )}
+            </Box>
           </Paper>
         </Grid>
 
         {/* Borrow Status Distribution */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3 }}>
+        <Grid item xs={12} md={6}>
+          <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Borrow Status
             </Typography>
-            {borrowStatus && borrowStatus.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={borrowStatus}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ status, count }) => `${status}: ${count}`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="count"
-                  >
-                    {borrowStatus.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <Typography color="textSecondary">No data available</Typography>
-            )}
+            <Box sx={chartContentSx}>
+              {borrowStatus && borrowStatus.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                    <Pie
+                      data={borrowStatus}
+                      cx="50%"
+                      cy="46%"
+                      labelLine={false}
+                      label={isSmallScreen ? false : ((entry: any) => `${entry?.status ?? ''}: ${entry?.count ?? 0}`)}
+                      outerRadius={isSmallScreen ? '62%' : '72%'}
+                      fill="#8884d8"
+                      dataKey="count"
+                    >
+                      {borrowStatus.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend verticalAlign='bottom' height={36} wrapperStyle={{ fontSize: 12 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <Box sx={{ height: '100%', display: 'grid', placeItems: 'center' }}>
+                  <Typography color="textSecondary">No data available</Typography>
+                </Box>
+              )}
+            </Box>
           </Paper>
         </Grid>
 
         {/* Most Borrowed Books */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
+          <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Most Borrowed Books
             </Typography>
+            <Box sx={chartContentSx}>
             {mostBorrowed && mostBorrowed.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={mostBorrowed}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={mostBorrowed} margin={{ top: 8, right: 12, left: 2, bottom: isSmallScreen ? 18 : 68 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="title"
-                    tick={{ fontSize: 12 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
+                    tick={{ fontSize: compactTickFontSize }}
+                    tickFormatter={(value: string) => shortenLabel(value, isSmallScreen ? 10 : 16)}
+                    angle={isSmallScreen ? 0 : -35}
+                    textAnchor={isSmallScreen ? 'middle' : 'end'}
+                    interval={isSmallScreen ? 'preserveStartEnd' : 0}
+                    minTickGap={isSmallScreen ? 22 : 10}
+                    height={isSmallScreen ? 34 : 74}
                   />
-                  <YAxis />
-                  <Tooltip />
+                  <YAxis width={isSmallScreen ? 30 : 42} tick={{ fontSize: compactTickFontSize }} />
+                  <Tooltip
+                    contentStyle={chartTooltipStyle}
+                    labelStyle={chartTooltipLabelStyle}
+                    itemStyle={chartTooltipItemStyle}
+                  />
+                  <Legend />
                   <Bar dataKey="borrowCount" fill="#2ecc71" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <Typography color="textSecondary">No data available</Typography>
+              <Box sx={{ height: '100%', display: 'grid', placeItems: 'center' }}>
+                <Typography color="textSecondary">No data available</Typography>
+              </Box>
             )}
+            </Box>
           </Paper>
         </Grid>
 
         {/* Category Borrow Stats */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
+          <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Borrows by Category
             </Typography>
-            {categoryStats && categoryStats.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  data={categoryStats.slice(0, 8)}
-                  layout="vertical"
-                  margin={{ top: 5, right: 30, left: 250, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="category" type="category" width={240} tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="borrowCount" fill="#9b59b6" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <Typography color="textSecondary">No data available</Typography>
-            )}
+            <Box sx={chartContentSx}>
+              {topCategoryStats.length > 0 && hasCategoryBorrowData ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={topCategoryStats}
+                    layout="vertical"
+                    margin={{
+                      top: 8,
+                      right: isSmallScreen ? 8 : 12,
+                      left: isSmallScreen ? 6 : 8,
+                      bottom: 8
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      type="number"
+                      allowDecimals={false}
+                      domain={[0, 'dataMax + 1']}
+                      tick={{ fontSize: compactTickFontSize }}
+                    />
+                    <YAxis
+                      dataKey="category"
+                      type="category"
+                      width={isSmallScreen ? 64 : 88}
+                      tick={{ fontSize: compactTickFontSize }}
+                      tickFormatter={(value: string) => shortenLabel(value, isSmallScreen ? 9 : 13)}
+                    />
+                    <Tooltip
+                      contentStyle={chartTooltipStyle}
+                      labelStyle={chartTooltipLabelStyle}
+                      itemStyle={chartTooltipItemStyle}
+                    />
+                    <Bar dataKey="borrowCount" fill="#9b59b6" minPointSize={4} barSize={18} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+              <Box sx={{ height: '100%', display: 'grid', placeItems: 'center' }}>
+                <Typography color="textSecondary">No borrow activity by category yet</Typography>
+              </Box>
+              )}
+            </Box>
           </Paper>
         </Grid>
 
         {/* Users by Role */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
+          <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Users by Role
             </Typography>
+            <Box sx={chartContentSx}>
             {usersByRole && usersByRole.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
                   <Pie
                     data={usersByRole}
                     cx="50%"
-                    cy="50%"
+                    cy="46%"
                     labelLine={false}
-                    label={({ role, count }) => `${role}: ${count}`}
-                    outerRadius={80}
+                    label={isSmallScreen ? false : ((entry: any) => `${entry?.role ?? ''}: ${entry?.count ?? 0}`)}
+                    outerRadius={isSmallScreen ? '62%' : '72%'}
                     fill="#8884d8"
                     dataKey="count"
                   >
@@ -298,92 +437,105 @@ export const AdminDashboard = () => {
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend verticalAlign='bottom' height={36} wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <Typography color="textSecondary">No data available</Typography>
+              <Box sx={{ height: '100%', display: 'grid', placeItems: 'center' }}>
+                <Typography color="textSecondary">No data available</Typography>
+              </Box>
             )}
+            </Box>
           </Paper>
         </Grid>
 
         {/* Least Borrowed Books */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
+          <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Least Borrowed Books
             </Typography>
-            {leastBorrowed && leastBorrowed.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={leastBorrowed}>
+            <Box sx={chartContentSx}>
+            {leastBorrowedChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={leastBorrowedChartData} margin={{ top: 8, right: 12, left: 2, bottom: isSmallScreen ? 18 : 68 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="title"
-                    tick={{ fontSize: 12 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
+                    tick={{ fontSize: compactTickFontSize }}
+                    tickFormatter={(value: string) => shortenLabel(value, isSmallScreen ? 10 : 16)}
+                    angle={isSmallScreen ? 0 : -35}
+                    textAnchor={isSmallScreen ? 'middle' : 'end'}
+                    interval={isSmallScreen ? 'preserveStartEnd' : 0}
+                    minTickGap={isSmallScreen ? 22 : 10}
+                    height={isSmallScreen ? 34 : 74}
                   />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="borrowCount" fill="#e74c3c" />
+                  <YAxis
+                    width={isSmallScreen ? 30 : 42}
+                    tick={{ fontSize: compactTickFontSize }}
+                    allowDecimals={false}
+                    domain={[0, 'dataMax + 1']}
+                  />
+                  <Tooltip
+                    formatter={(_value: any, _name: any, item: any) => [item?.payload?.borrowCount ?? 0, 'borrowCount']}
+                    contentStyle={chartTooltipStyle}
+                    labelStyle={chartTooltipLabelStyle}
+                    itemStyle={chartTooltipItemStyle}
+                  />
+                  <Legend />
+                  <Bar dataKey="borrowCountChart" name="borrowCount" fill="#e74c3c" minPointSize={4} barSize={18} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <Typography color="textSecondary">No data available</Typography>
+              <Box sx={{ height: '100%', display: 'grid', placeItems: 'center' }}>
+                <Typography color="textSecondary">No data available</Typography>
+              </Box>
             )}
+            </Box>
           </Paper>
         </Grid>
       </Grid>
 
       {/* Late Returns Table */}
       {lateReturns && lateReturns.length > 0 && (
-        <Paper sx={{ p: 3 }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '12px', border: '1px solid', borderColor: 'divider' }}>
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
             Late Returns ({lateReturns.length})
           </Typography>
-          <Box sx={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f5f5f5' }}>
-                  <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-                    User
-                  </th>
-                  <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-                    Book
-                  </th>
-                  <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-                    Due Date
-                  </th>
-                  <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-                    Days Overdue
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+          <TableContainer>
+            <Table size='small'>
+              <TableHead>
+                <TableRow sx={{ bgcolor: alpha(theme.palette.error.main, 0.08) }}>
+                  <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Book</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Due Date</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Days Overdue</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {lateReturns.map((item) => {
                   const daysOverdue = Math.floor(
                     (new Date().getTime() - new Date(item.dueDate).getTime()) / (1000 * 60 * 60 * 24)
                   );
                   return (
-                    <tr key={item.id}>
-                      <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
-                        {item.user?.name}
-                      </td>
-                      <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
-                        {item.book?.title}
-                      </td>
-                      <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
-                        {new Date(item.dueDate).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: '8px', borderBottom: '1px solid #eee', color: '#e74c3c' }}>
-                        {daysOverdue} days
-                      </td>
-                    </tr>
+                    <TableRow key={item.id} hover>
+                      <TableCell>{item.user?.name || '-'}</TableCell>
+                      <TableCell>{item.book?.title || '-'}</TableCell>
+                      <TableCell>{new Date(item.dueDate).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Chip
+                          size='small'
+                          color='error'
+                          variant='outlined'
+                          label={`${daysOverdue} days`}
+                        />
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
-          </Box>
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Paper>
       )}
     </Container>

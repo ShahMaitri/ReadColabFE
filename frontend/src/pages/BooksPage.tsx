@@ -1,7 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
+  alpha,
   Box,
   Button,
+  ButtonBase,
   Card,
   TextField,
   Stack,
@@ -18,16 +20,21 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  Chip
+  Chip,
+  Typography,
+  InputAdornment
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import SearchIcon from '@mui/icons-material/Search';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { useBooks, useCategories, useDeleteBook } from '../hooks/useBooks';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAddToWishlist, useIsInWishlist, useRemoveFromWishlist } from '../hooks/useWishlist';
+import { useTheme } from '@mui/material/styles';
 
 const WishlistAction = ({ bookId }: { bookId: string }) => {
   const { data: isInWishlist = false, isLoading } = useIsInWishlist(bookId);
@@ -48,19 +55,22 @@ const WishlistAction = ({ bookId }: { bookId: string }) => {
       size='small'
       variant={isInWishlist ? 'contained' : 'outlined'}
       color='secondary'
-      startIcon={<BookmarkIcon />}
+      sx={{ minWidth: 36, px: 1 }}
       onClick={handleToggle}
-      disabled={isAdding || isRemoving}
+      disabled={isLoading || isAdding || isRemoving}
+      aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
     >
-      {isInWishlist ? 'Wishlisted' : 'Add to Wishlist'}
+      <BookmarkIcon fontSize='small' />
     </Button>
   );
 };
 
 export const BooksPage = () => {
+  const theme = useTheme();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams.get('search') || '');
   const [category, setCategory] = useState('');
   const [sortBy, setSortBy] = useState<'title' | 'author' | 'createdAt'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -80,6 +90,13 @@ export const BooksPage = () => {
   const { mutate: deleteBook, isPending: isDeleting } = useDeleteBook();
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const activeFiltersCount = [search.trim(), category].filter(Boolean).length;
+
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    setSearch(urlSearch);
+    setPage(0);
+  }, [searchParams]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -116,22 +133,129 @@ export const BooksPage = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Stack spacing={3}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1>Books Library</h1>
-          {isAdmin && (
-            <Button
-              variant='contained'
-              startIcon={<AddIcon />}
-              onClick={() => navigate('/books/create')}
+        <Card
+          elevation={0}
+          sx={{
+            p: { xs: 2.5, md: 3 },
+            borderRadius: '12px',
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,
+            background:
+              theme.palette.mode === 'dark'
+                ? `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.3)} 0%, ${alpha(theme.palette.background.paper, 0.95)} 100%)`
+                : `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.28)} 0%, ${alpha('#ffffff', 0.96)} 100%)`
+          }}
+        >
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            justifyContent='space-between'
+            alignItems={{ xs: 'flex-start', md: 'flex-start' }}
+            spacing={2}
+            sx={{ width: '100%' }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant='h4' sx={{ fontWeight: 800, letterSpacing: 0.2 }}>
+                Books Library
+              </Typography>
+              <Typography variant='body2' color='text.secondary' sx={{ mt: 0.75 }}>
+                Discover, filter, and manage the collection with faster browsing controls.
+              </Typography>
+            </Box>
+            <Stack
+              direction='row'
+              spacing={1}
+              flexWrap='wrap'
+              useFlexGap
+              sx={{
+                ml: { md: 'auto' },
+                width: { xs: '100%', md: 'fit-content' },
+                justifyContent: 'flex-end',
+                alignSelf: { xs: 'flex-end', md: 'flex-start' }
+              }}
             >
-              Add Book
-            </Button>
-          )}
-        </Box>
+              <Chip
+                size='small'
+                variant='outlined'
+                label={
+                  <Stack spacing={0.15} sx={{ alignItems: 'center', py: 0.25 }}>
+                    <Typography variant='subtitle2' sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+                      {data?.total || 0}
+                    </Typography>
+                    <Typography variant='caption' sx={{ lineHeight: 1.1 }}>
+                      Total Books
+                    </Typography>
+                  </Stack>
+                }
+                sx={{
+                  bgcolor: alpha(theme.palette.background.paper, 0.6),
+                  height: 'auto',
+                  '& .MuiChip-label': { px: 1.25, py: 0.35 }
+                }}
+              />
+              <Chip
+                size='small'
+                color={activeFiltersCount > 0 ? 'primary' : 'default'}
+                variant={activeFiltersCount > 0 ? 'filled' : 'outlined'}
+                label={
+                  <Stack spacing={0.15} sx={{ alignItems: 'center', py: 0.25 }}>
+                    <Typography variant='subtitle2' sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+                      {activeFiltersCount}
+                    </Typography>
+                    <Typography variant='caption' sx={{ lineHeight: 1.1 }}>
+                      Active Filters
+                    </Typography>
+                  </Stack>
+                }
+                sx={{
+                  height: 'auto',
+                  '& .MuiChip-label': { px: 1.25, py: 0.35 }
+                }}
+              />
+              {isAdmin && (
+                <ButtonBase
+                  onClick={() => navigate('/books/create')}
+                  sx={{
+                    borderRadius: 2,
+                    px: 1,
+                    py: 0.5,
+                    transition: 'transform 160ms ease, opacity 160ms ease',
+                    '&:active': {
+                      transform: 'scale(0.96)'
+                    }
+                  }}
+                >
+                  <Stack spacing={0.25} sx={{ alignItems: 'center' }}>
+                    <Box
+                      sx={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: '50%',
+                        display: 'grid',
+                        placeItems: 'center',
+                        bgcolor: 'primary.main',
+                        color: 'primary.contrastText'
+                      }}
+                    >
+                      <AddIcon fontSize='small' />
+                    </Box>
+                    <Typography variant='caption' sx={{ fontWeight: 600 }}>
+                      Add Book
+                    </Typography>
+                  </Stack>
+                </ButtonBase>
+              )}
+            </Stack>
+          </Stack>
+        </Card>
 
         {/* Filters */}
-        <Card sx={{ p: 2 }}>
+        <Card
+          elevation={0}
+          sx={{
+            p: 2,
+            borderRadius: '12px',
+            border: `1px solid ${alpha(theme.palette.divider, 0.7)}`
+          }}
+        >
           <Stack spacing={2}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
@@ -144,6 +268,13 @@ export const BooksPage = () => {
                 fullWidth
                 size='small'
                 placeholder='Type to search...'
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <SearchIcon fontSize='small' />
+                    </InputAdornment>
+                  )
+                }}
               />
               <FormControl sx={{ minWidth: 150 }} size='small'>
                 <InputLabel>Category</InputLabel>
@@ -192,6 +323,19 @@ export const BooksPage = () => {
                   <MenuItem value='asc'>Ascending</MenuItem>
                 </Select>
               </FormControl>
+              <Button
+                variant='text'
+                color='inherit'
+                startIcon={<RestartAltIcon />}
+                disabled={!search && !category}
+                onClick={() => {
+                  setSearch('');
+                  setCategory('');
+                  setPage(0);
+                }}
+              >
+                Reset
+              </Button>
             </Stack>
           </Stack>
         </Card>
@@ -206,11 +350,11 @@ export const BooksPage = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <Card>
+          <Card elevation={0} sx={{ borderRadius: '12px', border: `1px solid ${alpha(theme.palette.divider, 0.7)}` }}>
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                  <TableRow sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.08) }}>
                     <TableCell sx={{ fontWeight: 600 }}>Title</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Author</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Publication Date</TableCell>
@@ -233,7 +377,7 @@ export const BooksPage = () => {
                         <TableCell>
                           <Box
                             onClick={() => navigate(`/books/${book.id}`)}
-                            sx={{ cursor: 'pointer', color: '#1976d2', textDecoration: 'none' }}
+                            sx={{ cursor: 'pointer', color: 'primary.main', fontWeight: 600 }}
                           >
                             {book.title}
                           </Box>
@@ -268,20 +412,22 @@ export const BooksPage = () => {
                               <Button
                                 size='small'
                                 variant='outlined'
-                                startIcon={<EditIcon />}
+                                aria-label='Edit book'
                                 onClick={() => navigate(`/books/${book.id}/edit`)}
+                                sx={{ minWidth: 0, px: 1 }}
                               >
-                                Edit
+                                <EditIcon fontSize='small' />
                               </Button>
                               <Button
                                 size='small'
                                 variant='outlined'
                                 color='error'
-                                startIcon={<DeleteIcon />}
+                                aria-label='Delete book'
                                 onClick={() => handleDelete(book.id)}
                                 disabled={isDeleting}
+                                sx={{ minWidth: 0, px: 1 }}
                               >
-                                Delete
+                                <DeleteIcon fontSize='small' />
                               </Button>
                             </Stack>
                           </TableCell>
@@ -290,8 +436,13 @@ export const BooksPage = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={isAdmin ? 8 : 8} align='center' sx={{ py: 4 }}>
-                        No books found
+                      <TableCell colSpan={isAdmin ? 9 : 9} align='center' sx={{ py: 6 }}>
+                        <Typography variant='subtitle1' sx={{ fontWeight: 700, mb: 0.5 }}>
+                          No books found
+                        </Typography>
+                        <Typography variant='body2' color='text.secondary'>
+                          Try adjusting your search or filters to broaden results.
+                        </Typography>
                       </TableCell>
                     </TableRow>
                   )}

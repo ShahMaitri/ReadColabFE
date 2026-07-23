@@ -6,7 +6,7 @@ import { prisma } from '../config/prisma';
 import { NotificationService } from '../notifications';
 
 const reservationRepository = new ReservationRepository(prisma);
-const bookRepository = new BookRepository(prisma);
+const bookRepository = new BookRepository();
 
 const RESERVATION_STATUS = {
   PENDING: 'PENDING',
@@ -29,6 +29,25 @@ export class ReservationService {
       bookId
     );
     if (existingReservation) {
+      if (existingReservation.status === RESERVATION_STATUS.CANCELLED) {
+        const pendingCount = await prisma.reservation.count({
+          where: {
+            bookId,
+            status: RESERVATION_STATUS.PENDING,
+          },
+        });
+
+        const reactivatedReservation = await prisma.reservation.update({
+          where: { id: existingReservation.id },
+          data: {
+            status: RESERVATION_STATUS.PENDING,
+            position: pendingCount + 1,
+          },
+        });
+
+        return reactivatedReservation;
+      }
+
       throw new AppError('You already have a reservation for this book', 409);
     }
 

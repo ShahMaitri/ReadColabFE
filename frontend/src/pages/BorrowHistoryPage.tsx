@@ -1,4 +1,5 @@
 import {
+  alpha,
   Box,
   Card,
   CircularProgress,
@@ -12,11 +13,14 @@ import {
   Chip,
   Typography,
   TablePagination,
+  Paper,
 } from '@mui/material';
 import { useBorrowHistory } from '../hooks/useBorrowReservation';
 import { useState } from 'react';
+import { useTheme } from '@mui/material/styles';
 
 export const BorrowHistoryPage = () => {
+  const theme = useTheme();
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(10);
 
@@ -86,19 +90,42 @@ export const BorrowHistoryPage = () => {
   };
 
   return (
-    <Box>
-      <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-        Borrow History
-      </Typography>
+    <Box sx={{ p: 3 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2, md: 2.5 },
+          mb: 3,
+          borderRadius: '12px',
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+          background:
+            theme.palette.mode === 'dark'
+              ? `linear-gradient(120deg, ${alpha(theme.palette.primary.dark, 0.24)} 0%, ${alpha(theme.palette.background.paper, 0.94)} 100%)`
+              : `linear-gradient(120deg, ${alpha(theme.palette.primary.light, 0.24)} 0%, ${alpha('#ffffff', 0.97)} 100%)`
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
+          Borrow History
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Complete log of requests, approvals, borrows, and returns.
+        </Typography>
+      </Paper>
 
       {(!data?.data || data.data.length === 0) ? (
         <Alert severity="info">No borrow history found</Alert>
       ) : (
         <>
-          <TableContainer component={Card}>
-            <Table>
+          <TableContainer component={Card} sx={{ borderRadius: '12px', border: '1px solid', borderColor: 'divider' }}>
+            <Table
+              sx={{
+                '& tbody .MuiTableCell-root': {
+                  py: 1.8
+                }
+              }}
+            >
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                <TableRow>
                   <TableCell>Book Title</TableCell>
                   <TableCell>Author</TableCell>
                   <TableCell>Status</TableCell>

@@ -6,12 +6,14 @@ export class GitHubModelsProvider extends BaseAIProvider {
   isConfigured: boolean;
   private token: string | undefined;
   private model: string = 'gpt-4'; // Default model
+  private endpoint: string;
 
   constructor(token?: string, model?: string) {
     super();
     this.token = token;
     this.model = model || 'gpt-4';
     this.isConfigured = !!token;
+    this.endpoint = process.env.GITHUB_MODELS_ENDPOINT || 'https://models.inference.ai.azure.com/chat/completions';
   }
 
   async chat(messages: AIMessage[]): Promise<string> {
@@ -20,10 +22,45 @@ export class GitHubModelsProvider extends BaseAIProvider {
     }
 
     try {
-      // NOTE: This is a stub implementation
-      // Actual GitHub Models API calls would be made here
-      // For now, return a mock response to demonstrate the architecture
-      return this.getMockResponse('chat', messages);
+      const response = await fetch(this.endpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages: messages.map((message) => ({
+            role: message.role,
+            content: message.content
+          })),
+          temperature: 0.7,
+          top_p: 1,
+          max_tokens: 1000
+        })
+      });
+
+      if (!response.ok) {
+        let details = '';
+        try {
+          const errorBody = await response.json() as { error?: { message?: string } };
+          details = errorBody?.error?.message ? `: ${errorBody.error.message}` : '';
+        } catch (_error) {
+          // Ignore parsing errors and fallback to status text.
+        }
+        throw new Error(`GitHub Models request failed (${response.status} ${response.statusText})${details}`);
+      }
+
+      const data = await response.json() as {
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+
+      const content = data.choices?.[0]?.message?.content;
+      if (!content || typeof content !== 'string') {
+        throw new Error('GitHub Models returned an empty response');
+      }
+
+      return content;
     } catch (error) {
       throw new Error(`GitHub Models API error: ${error}`);
     }

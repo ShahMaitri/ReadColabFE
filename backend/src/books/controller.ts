@@ -9,10 +9,15 @@ export const createBook = asyncHandler(
     const validatedData = createBookSchema.parse(req.body);
     const userId = (req as any).user?.sub;
 
-    const book = await bookService.createBook({
+    const createPayload = {
       ...validatedData,
+      publicationDate: validatedData.publicationDate
+        ? new Date(validatedData.publicationDate)
+        : undefined,
       addedBy: userId
-    });
+    };
+
+    const book = await bookService.createBook(createPayload);
 
     res.status(201).json({
       success: true,
@@ -61,7 +66,14 @@ export const updateBook = asyncHandler(
     const { id } = req.params;
     const validatedData = updateBookSchema.parse(req.body);
 
-    const book = await bookService.updateBook(id, validatedData);
+    const updatePayload = {
+      ...validatedData,
+      publicationDate: validatedData.publicationDate
+        ? new Date(validatedData.publicationDate)
+        : undefined
+    };
+
+    const book = await bookService.updateBook(id, updatePayload);
 
     res.status(200).json({
       success: true,
