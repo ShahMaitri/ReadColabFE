@@ -101,6 +101,20 @@ export const uploadCover = asyncHandler(
   }
 );
 
+export const removeCover = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { id } = req.params;
+
+    const book = await bookService.removeCover(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Book cover removed successfully',
+      data: book
+    });
+  }
+);
+
 export const generateQRCode = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { id } = req.params;

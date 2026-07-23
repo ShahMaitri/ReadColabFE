@@ -13,7 +13,9 @@ import {
   returnBorrow,
   getReservations,
   cancelReservation,
-  markReservationReady
+  markReservationReady,
+  getAdminReviews,
+  deleteAdminReview
 } from './controller';
 
 const adminRouter = Router();
@@ -52,5 +54,9 @@ adminRouter.post('/borrows/:id/return', returnBorrow);
 adminRouter.get('/reservations', getReservations);
 adminRouter.post('/reservations/:id/cancel', cancelReservation);
 adminRouter.post('/reservations/:id/ready', markReservationReady);
+
+// Review management
+adminRouter.get('/reviews', getAdminReviews);
+adminRouter.delete('/reviews/:id', deleteAdminReview);
 
 export default adminRouter;

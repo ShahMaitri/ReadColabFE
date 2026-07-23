@@ -11,6 +11,7 @@ import { BookDetailsPage } from '../pages/BookDetailsPage';
 import { MyBooksPage } from '../pages/MyBooksPage';
 import { BorrowHistoryPage } from '../pages/BorrowHistoryPage';
 import { WishlistPage } from '../pages/WishlistPage';
+import { MyReviewsPage } from '../pages/MyReviewsPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AdminRoute } from './AdminRoute';
@@ -20,6 +21,7 @@ import { ManageBooksPage } from '../pages/admin/ManageBooksPage';
 import { ManageUsersPage } from '../pages/admin/ManageUsersPage';
 import { ManageBorrowsPage } from '../pages/admin/ManageBorrowsPage';
 import { ManageReservationsPage } from '../pages/admin/ManageReservationsPage';
+import { ReviewManagementPage } from '../pages/admin/ReviewManagementPage';
 
 export const AppRouter = () => {
   return (
@@ -36,6 +38,7 @@ export const AppRouter = () => {
           <Route path='/books/:id/edit' element={<CreateEditBookPage />} />
           <Route path='/my-books' element={<MyBooksPage />} />
           <Route path='/wishlist' element={<WishlistPage />} />
+          <Route path='/my-reviews' element={<MyReviewsPage />} />
           <Route path='/borrow-history' element={<BorrowHistoryPage />} />
           <Route path='/reports' element={<ReportsPage />} />
         </Route>
@@ -47,6 +50,7 @@ export const AppRouter = () => {
             <Route path='users' element={<ManageUsersPage />} />
             <Route path='borrows' element={<ManageBorrowsPage />} />
             <Route path='reservations' element={<ManageReservationsPage />} />
+            <Route path='reviews' element={<ReviewManagementPage />} />
           </Route>
         </Route>
       </Route>

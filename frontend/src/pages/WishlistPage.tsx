@@ -19,6 +19,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useWishlist, useRemoveFromWishlist } from '../hooks/useWishlist';
 import { useNotification } from '../context/NotificationContext';
 import { useRequestBorrow } from '../hooks/useBorrowReservation';
+import { resolveCoverImageUrl } from '../utils/media';
 
 export const WishlistPage = () => {
   const [page, setPage] = useState(1);
@@ -101,15 +102,16 @@ export const WishlistPage = () => {
                 }
               }}
             >
-              {item.book.cover && (
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={item.book.cover}
-                  alt={item.book.title}
-                  sx={{ objectFit: 'cover' }}
-                />
-              )}
+              <CardMedia
+                component="img"
+                height="200"
+                image={resolveCoverImageUrl(item.book.cover)}
+                alt={item.book.title}
+                sx={{ objectFit: 'cover' }}
+                onError={(event) => {
+                  event.currentTarget.src = '/book-placeholder.svg';
+                }}
+              />
 
               <CardContent sx={{ flexGrow: 1 }}>
                 <Typography gutterBottom variant="subtitle1" noWrap>

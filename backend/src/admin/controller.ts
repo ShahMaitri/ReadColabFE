@@ -3,6 +3,7 @@ import { prisma } from '../config/prisma';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from '../utils/appError';
 import { NotificationService } from '../notifications';
+import { reviewService } from '../review/service';
 
 // Books
 export const getAllBooks = asyncHandler(async (req: Request, res: Response) => {
@@ -308,6 +309,44 @@ export const markReservationReady = asyncHandler(async (req: Request, res: Respo
   });
 });
 
+export const getAdminReviews = asyncHandler(async (req: Request, res: Response) => {
+  const query = {
+    page: parseInt(req.query.page as string) || 1,
+    limit: parseInt(req.query.limit as string) || 20,
+    sortBy: (req.query.sortBy as any) || 'newest',
+    rating: req.query.rating ? parseInt(req.query.rating as string) : undefined,
+    search: typeof req.query.search === 'string' ? req.query.search : undefined,
+    bookId: typeof req.query.bookId === 'string' ? req.query.bookId : undefined,
+    userId: typeof req.query.userId === 'string' ? req.query.userId : undefined,
+    reportedOnly: req.query.reportedOnly === 'true'
+  };
+
+  const result = await reviewService.getAdminReviews(query as any);
+
+  res.json({
+    success: true,
+    message: 'Reviews retrieved',
+    data: result.data,
+    pagination: {
+      total: result.total,
+      page: query.page,
+      limit: query.limit,
+      pages: result.pages
+    }
+  });
+});
+
+export const deleteAdminReview = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const review = await reviewService.deleteReview(id, undefined, true);
+
+  res.json({
+    success: true,
+    message: 'Review deleted successfully',
+    data: review
+  });
+});
+
 export default {
   // Books
   getAllBooks,
@@ -325,5 +364,8 @@ export default {
   // Reservations
   getReservations,
   cancelReservation,
-  markReservationReady
+  markReservationReady,
+  // Reviews
+  getAdminReviews,
+  deleteAdminReview
 };

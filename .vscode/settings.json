@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd /Users/m\\.anilkumar\\.shah/Desktop/Maitri/Book/backend && node -e 'const base=\"http://localhost:5000/api/v1\"; \\(async\\(\\)=>\\{ const lr=await fetch\\(base\\+\"/auth/login\",\\{method:\"POST\",headers:\\{\"Content-Type\":\"application/json\"\\},body:JSON\\.stringify\\(\\{email:\"admin@example\\.com\",password:\"Admin@12345\"\\}\\)\\}\\); const lj=await lr\\.json\\(\\); const token=lj\\.data\\.accessToken; const res=await fetch\\(base\\+\"/books/book1/reviews\",\\{headers:\\{Authorization:\"Bearer \"\\+token\\}\\}\\); const text=await res\\.text\\(\\); console\\.log\\(\"status\",res\\.status\\); console\\.log\\(text\\); \\}\\)\\(\\)\\.catch\\(e=>\\{console\\.error\\(e\\);process\\.exit\\(1\\);\\}\\);'$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

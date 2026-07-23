@@ -96,6 +96,23 @@ export const BooksPage = () => {
     }
   };
 
+  const formatPublicationDate = (publicationDate?: string) => {
+    if (!publicationDate) {
+      return '-';
+    }
+
+    const date = new Date(publicationDate);
+    if (Number.isNaN(date.getTime())) {
+      return '-';
+    }
+
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Stack spacing={3}>
@@ -196,6 +213,7 @@ export const BooksPage = () => {
                   <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
                     <TableCell sx={{ fontWeight: 600 }}>Title</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Author</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Publication Date</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
                     <TableCell align='center' sx={{ fontWeight: 600 }}>
                       Total
@@ -221,6 +239,7 @@ export const BooksPage = () => {
                           </Box>
                         </TableCell>
                         <TableCell>{book.author}</TableCell>
+                        <TableCell>{formatPublicationDate(book.publicationDate)}</TableCell>
                         <TableCell>{book.category || '-'}</TableCell>
                         <TableCell align='center'>{book.quantity}</TableCell>
                         <TableCell align='center'>{book.availableQuantity}</TableCell>
@@ -271,7 +290,7 @@ export const BooksPage = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={isAdmin ? 7 : 7} align='center' sx={{ py: 4 }}>
+                      <TableCell colSpan={isAdmin ? 8 : 8} align='center' sx={{ py: 4 }}>
                         No books found
                       </TableCell>
                     </TableRow>

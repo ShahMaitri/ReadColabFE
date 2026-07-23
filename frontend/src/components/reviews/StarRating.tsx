@@ -6,6 +6,7 @@ interface StarRatingProps {
   readOnly?: boolean;
   showValue?: boolean;
   size?: 'small' | 'medium' | 'large';
+  precision?: number;
 }
 
 export const StarRating = ({ 
@@ -13,7 +14,8 @@ export const StarRating = ({
   onChange, 
   readOnly = false,
   showValue = true,
-  size = 'medium'
+  size = 'medium',
+  precision = readOnly ? 0.5 : 1
 }: StarRatingProps) => {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -26,7 +28,7 @@ export const StarRating = ({
         }}
         readOnly={readOnly}
         size={size}
-        precision={0.5}
+        precision={precision}
       />
       {showValue && (
         <Typography variant="body2" sx={{ minWidth: '30px' }}>

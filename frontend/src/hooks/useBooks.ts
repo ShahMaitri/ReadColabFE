@@ -17,6 +17,8 @@ export interface BookData {
   status: string;
   createdAt: string;
   updatedAt: string;
+  averageRating?: number;
+  totalReviews?: number;
 }
 
 export interface CreateBookPayload {
@@ -80,9 +82,12 @@ export const bookApi = {
   uploadCover: async (id: string, file: File): Promise<BookData> => {
     const formData = new FormData();
     formData.append('cover', file);
-    const response = await apiClient.post<{ success: boolean; data: BookData }>(`/books/${id}/cover`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await apiClient.post<{ success: boolean; data: BookData }>(`/books/${id}/cover`, formData);
+    return response.data.data;
+  },
+
+  removeCover: async (id: string): Promise<BookData> => {
+    const response = await apiClient.delete<{ success: boolean; data: BookData }>(`/books/${id}/cover`);
     return response.data.data;
   },
 
@@ -192,6 +197,18 @@ export const useUploadCover = () => {
 
   return useMutation({
     mutationFn: ({ id, file }: { id: string; file: File }) => bookApi.uploadCover(id, file),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
+      queryClient.setQueryData(bookKeys.detail(data.id), data);
+    }
+  });
+};
+
+export const useRemoveCover = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => bookApi.removeCover(id),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
       queryClient.setQueryData(bookKeys.detail(data.id), data);

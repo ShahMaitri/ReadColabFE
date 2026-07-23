@@ -56,6 +56,12 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
             </ListItemIcon>
             <ListItemText primary='Borrow History' />
           </ListItemButton>
+          <ListItemButton component={NavLink} to='/my-reviews'>
+            <ListItemIcon>
+              <EventNoteIcon />
+            </ListItemIcon>
+            <ListItemText primary='My Reviews' />
+          </ListItemButton>
         </List>
         <Divider />
         {isAdmin && (
@@ -78,6 +84,12 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
                 <EventNoteIcon />
               </ListItemIcon>
               <ListItemText primary='Reservations' />
+            </ListItemButton>
+            <ListItemButton component={NavLink} to='/admin/reviews'>
+              <ListItemIcon>
+                <EventNoteIcon />
+              </ListItemIcon>
+              <ListItemText primary='Review Management' />
             </ListItemButton>
             <ListItemButton component={NavLink} to='/admin/users'>
               <ListItemIcon>

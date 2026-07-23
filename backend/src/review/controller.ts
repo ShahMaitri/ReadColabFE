@@ -1,18 +1,23 @@
 import { Request, Response } from 'express';
 import { reviewService } from './service';
 import { asyncHandler } from '../utils/asyncHandler';
-import { z } from 'zod';
-import { createReviewSchema, updateReviewSchema } from './validation';
+import { adminReviewQuerySchema, createReviewSchema, reviewQuerySchema, updateReviewSchema } from './validation';
 
 export const createReview = asyncHandler(async (req: Request, res: Response) => {
   const { bookId, rating, comment } = createReviewSchema.parse(req.body);
-  const userId = (req as any).user.id;
+  const user = (req as any).user;
 
-  const review = await reviewService.createReview({ userId, bookId, rating, comment });
+  const review = await reviewService.createReview({
+    userId: user.id,
+    userRole: user.role,
+    bookId,
+    rating,
+    comment
+  });
 
   res.status(201).json({
     success: true,
-    message: 'Review created successfully',
+    message: 'Review created successfully.',
     data: review
   });
 });
@@ -23,46 +28,44 @@ export const getReview = asyncHandler(async (req: Request, res: Response) => {
 
   res.json({
     success: true,
-    message: 'Review retrieved',
+    message: 'Review retrieved successfully.',
     data: review
   });
 });
 
 export const getBookReviews = asyncHandler(async (req: Request, res: Response) => {
   const { bookId } = req.params;
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
+  const query = reviewQuerySchema.parse(req.query);
 
-  const result = await reviewService.getBookReviews(bookId, page, limit);
+  const result = await reviewService.getBookReviews(bookId, query);
 
   res.json({
     success: true,
-    message: 'Book reviews retrieved',
+    message: 'Book reviews retrieved successfully.',
     data: result.data,
     pagination: {
       total: result.total,
-      page,
-      limit,
+      page: query.page,
+      limit: query.limit,
       pages: result.pages
     }
   });
 });
 
-export const getUserReviews = asyncHandler(async (req: Request, res: Response) => {
+export const getMyReviews = asyncHandler(async (req: Request, res: Response) => {
   const userId = (req as any).user.id;
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
+  const query = reviewQuerySchema.parse(req.query);
 
-  const result = await reviewService.getUserReviews(userId, page, limit);
+  const result = await reviewService.getUserReviews(userId, query);
 
   res.json({
     success: true,
-    message: 'User reviews retrieved',
+    message: 'My reviews retrieved successfully.',
     data: result.data,
     pagination: {
       total: result.total,
-      page,
-      limit,
+      page: query.page,
+      limit: query.limit,
       pages: result.pages
     }
   });
@@ -77,7 +80,7 @@ export const updateReview = asyncHandler(async (req: Request, res: Response) => 
 
   res.json({
     success: true,
-    message: 'Review updated successfully',
+    message: 'Review updated successfully.',
     data: review
   });
 });
@@ -88,9 +91,9 @@ export const deleteReview = asyncHandler(async (req: Request, res: Response) => 
 
   const review = await reviewService.deleteReview(id, userId);
 
-  res.status(204).json({
+  res.status(200).json({
     success: true,
-    message: 'Review deleted successfully',
+    message: 'Review deleted successfully.',
     data: review
   });
 });
@@ -101,8 +104,49 @@ export const getBookRating = asyncHandler(async (req: Request, res: Response) =>
 
   res.json({
     success: true,
-    message: 'Book rating retrieved',
+    message: 'Book rating retrieved successfully.',
     data: rating
+  });
+});
+
+export const getReviewEligibility = asyncHandler(async (req: Request, res: Response) => {
+  const { bookId } = req.params;
+  const user = (req as any).user;
+
+  const result = await reviewService.getReviewEligibility(user.id, user.role, bookId);
+
+  res.json({
+    success: true,
+    message: 'Review eligibility retrieved successfully.',
+    data: result
+  });
+});
+
+export const getAdminReviews = asyncHandler(async (req: Request, res: Response) => {
+  const query = adminReviewQuerySchema.parse(req.query);
+  const result = await reviewService.getAdminReviews(query);
+
+  res.json({
+    success: true,
+    message: 'Reviews retrieved successfully.',
+    data: result.data,
+    pagination: {
+      total: result.total,
+      page: query.page,
+      limit: query.limit,
+      pages: result.pages
+    }
+  });
+});
+
+export const deleteReviewAsAdmin = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const review = await reviewService.deleteReview(id, undefined, true);
+
+  res.status(200).json({
+    success: true,
+    message: 'Review deleted successfully.',
+    data: review
   });
 });
 
@@ -110,7 +154,7 @@ export default {
   createReview,
   getReview,
   getBookReviews,
-  getUserReviews,
+  getMyReviews,
   updateReview,
   deleteReview,
   getBookRating

@@ -1,5 +1,21 @@
+import { Prisma, Review } from '@prisma/client';
 import { prisma } from '../config/prisma';
-import { Review } from '@prisma/client';
+
+const reviewInclude = {
+  user: { select: { id: true, name: true, email: true, avatar: true, role: true } },
+  book: { select: { id: true, title: true, author: true, cover: true } }
+} as const;
+
+export type ReviewWithRelations = Prisma.ReviewGetPayload<{ include: typeof reviewInclude }>;
+
+export type ReviewSortOption = 'newest' | 'oldest' | 'highestRating' | 'lowestRating';
+
+export interface ReviewListOptions {
+  skip?: number;
+  take?: number;
+  sortBy?: ReviewSortOption;
+  where?: Prisma.ReviewWhereInput;
+}
 
 export interface CreateReviewInput {
   userId: string;
@@ -14,68 +30,108 @@ export interface UpdateReviewInput {
 }
 
 export class ReviewRepository {
-  async create(data: CreateReviewInput): Promise<Review> {
+  private getOrderBy(sortBy: ReviewSortOption = 'newest'): Prisma.ReviewOrderByWithRelationInput[] {
+    switch (sortBy) {
+      case 'oldest':
+        return [{ createdAt: 'asc' }];
+      case 'highestRating':
+        return [{ rating: 'desc' }, { createdAt: 'desc' }];
+      case 'lowestRating':
+        return [{ rating: 'asc' }, { createdAt: 'desc' }];
+      case 'newest':
+      default:
+        return [{ createdAt: 'desc' }];
+    }
+  }
+
+  async create(data: CreateReviewInput): Promise<ReviewWithRelations> {
     return prisma.review.create({
       data,
-      include: {
-        user: { select: { id: true, name: true, avatar: true } },
-        book: { select: { id: true, title: true } }
-      }
-    } as any);
+      include: reviewInclude
+    });
   }
 
-  async findById(id: string): Promise<Review | null> {
+  async findById(id: string): Promise<ReviewWithRelations | null> {
     return prisma.review.findUnique({
       where: { id },
-      include: {
-        user: { select: { id: true, name: true, avatar: true } },
-        book: { select: { id: true, title: true } }
-      }
-    } as any);
+      include: reviewInclude
+    });
   }
 
-  async findByUserAndBook(userId: string, bookId: string): Promise<Review | null> {
+  async findByUserAndBook(userId: string, bookId: string): Promise<ReviewWithRelations | null> {
     return prisma.review.findUnique({
       where: { userId_bookId: { userId, bookId } },
-      include: {
-        user: { select: { id: true, name: true, avatar: true } },
-        book: { select: { id: true, title: true } }
-      }
-    } as any);
+      include: reviewInclude
+    });
   }
 
-  async findByBookId(bookId: string, limit: number = 10, offset: number = 0): Promise<Review[]> {
+  async findByBookId(
+    bookId: string,
+    options: ReviewListOptions = {}
+  ): Promise<ReviewWithRelations[]> {
+    const {
+      skip = 0,
+      take = 10,
+      sortBy = 'newest',
+      where
+    } = options;
+
     return prisma.review.findMany({
-      where: { bookId },
-      include: {
-        user: { select: { id: true, name: true, avatar: true } },
-        book: { select: { id: true, title: true } }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset
-    } as any);
+      where: { bookId, ...where },
+      include: reviewInclude,
+      orderBy: this.getOrderBy(sortBy),
+      take,
+      skip
+    });
   }
 
-  async findByUserId(userId: string, limit: number = 10, offset: number = 0): Promise<Review[]> {
+  async findByUserId(
+    userId: string,
+    options: ReviewListOptions = {}
+  ): Promise<ReviewWithRelations[]> {
+    const {
+      skip = 0,
+      take = 10,
+      sortBy = 'newest',
+      where
+    } = options;
+
     return prisma.review.findMany({
-      where: { userId },
-      include: {
-        user: { select: { id: true, name: true, avatar: true } },
-        book: { select: { id: true, title: true } }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset
-    } as any);
+      where: { userId, ...where },
+      include: reviewInclude,
+      orderBy: this.getOrderBy(sortBy),
+      take,
+      skip
+    });
+  }
+
+  async findAll(options: ReviewListOptions = {}): Promise<ReviewWithRelations[]> {
+    const {
+      skip = 0,
+      take = 20,
+      sortBy = 'newest',
+      where
+    } = options;
+
+    return prisma.review.findMany({
+      where,
+      include: reviewInclude,
+      orderBy: this.getOrderBy(sortBy),
+      take,
+      skip
+    });
+  }
+
+  async count(where: Prisma.ReviewWhereInput = {}): Promise<number> {
+    return prisma.review.count({ where });
   }
 
   async countByBookId(bookId: string): Promise<number> {
-    return prisma.review.count({ where: { bookId } });
+    return this.count({ bookId });
   }
 
   async countByUserId(userId: string): Promise<number> {
-    return prisma.review.count({ where: { userId } });
+    return this.count({ userId });
   }
 
   async getAverageRating(bookId: string): Promise<{ average: number; count: number }> {
@@ -105,25 +161,19 @@ export class ReviewRepository {
     return distribution;
   }
 
-  async update(id: string, data: UpdateReviewInput): Promise<Review> {
+  async update(id: string, data: UpdateReviewInput): Promise<ReviewWithRelations> {
     return prisma.review.update({
       where: { id },
       data,
-      include: {
-        user: { select: { id: true, name: true, avatar: true } },
-        book: { select: { id: true, title: true } }
-      }
-    } as any);
+      include: reviewInclude
+    });
   }
 
-  async delete(id: string): Promise<Review> {
+  async delete(id: string): Promise<ReviewWithRelations> {
     return prisma.review.delete({
       where: { id },
-      include: {
-        user: { select: { id: true, name: true, avatar: true } },
-        book: { select: { id: true, title: true } }
-      }
-    } as any);
+      include: reviewInclude
+    });
   }
 }
 

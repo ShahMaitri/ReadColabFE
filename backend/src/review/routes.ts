@@ -4,7 +4,7 @@ import {
   createReview,
   getReview,
   getBookReviews,
-  getUserReviews,
+  getMyReviews,
   updateReview,
   deleteReview,
   getBookRating
@@ -14,12 +14,12 @@ const reviewRouter = Router();
 
 // User routes
 reviewRouter.post('/', authenticate, createReview);
-reviewRouter.get('/user/me', authenticate, getUserReviews);
-reviewRouter.get('/:id', getReview);
+reviewRouter.get('/me', authenticate, getMyReviews);
+reviewRouter.get('/:id', authenticate, getReview);
 reviewRouter.patch('/:id', authenticate, updateReview);
 reviewRouter.delete('/:id', authenticate, deleteReview);
 
-// Book reviews
+// Legacy aliases for book reviews (book routes expose the canonical paths)
 reviewRouter.get('/book/:bookId', getBookReviews);
 reviewRouter.get('/book/:bookId/rating', getBookRating);
 

@@ -73,6 +73,11 @@ export class BookRepository {
             name: true,
             email: true
           }
+        },
+        reviews: {
+          select: {
+            rating: true
+          }
         }
       }
     });
@@ -87,9 +92,9 @@ export class BookRepository {
 
     if (filters.search) {
       where.OR = [
-        { title: { contains: filters.search, mode: 'insensitive' } },
-        { author: { contains: filters.search, mode: 'insensitive' } },
-        { description: { contains: filters.search, mode: 'insensitive' } }
+        { title: { contains: filters.search } },
+        { author: { contains: filters.search } },
+        { description: { contains: filters.search } }
       ];
     }
 
@@ -102,7 +107,7 @@ export class BookRepository {
     }
 
     if (filters.author) {
-      where.author = { contains: filters.author, mode: 'insensitive' };
+      where.author = { contains: filters.author };
     }
 
     const skip = (pagination.page - 1) * pagination.limit;
@@ -179,6 +184,13 @@ export class BookRepository {
     return prisma.book.update({
       where: { id },
       data: { cover: coverUrl }
+    });
+  }
+
+  async removeCover(id: string): Promise<Book> {
+    return prisma.book.update({
+      where: { id },
+      data: { cover: null }
     });
   }
 

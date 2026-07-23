@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as bookController from './controller';
 import { authenticate, authorize, isAdmin } from '../middleware/authenticate';
 import { upload } from '../common/upload';
+import { getBookReviews, getBookRating, getReviewEligibility } from '../review/controller';
 
 export const booksRouter = Router();
 
@@ -9,6 +10,9 @@ export const booksRouter = Router();
 booksRouter.get('/', bookController.getBooks);
 booksRouter.get('/search', bookController.searchBooks);
 booksRouter.get('/categories', bookController.getCategories);
+booksRouter.get('/:bookId/reviews', getBookReviews);
+booksRouter.get('/:bookId/rating', getBookRating);
+booksRouter.get('/:bookId/review-eligibility', authenticate, getReviewEligibility);
 booksRouter.get('/:id', bookController.getBook);
 
 // Admin routes
@@ -22,4 +26,5 @@ booksRouter.post(
   upload.single('cover'),
   bookController.uploadCover
 );
+booksRouter.delete('/:id/cover', authenticate, isAdmin, bookController.removeCover);
 booksRouter.post('/:id/qr-code', authenticate, isAdmin, bookController.generateQRCode);

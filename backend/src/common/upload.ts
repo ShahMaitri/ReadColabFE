@@ -19,11 +19,25 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req: any, file: Express.Multer.File, cb: any) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-  if (allowedTypes.includes(file.mimetype)) {
+  const allowedTypes = new Set([
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/avif',
+    'image/heic',
+    'image/heif',
+    'image/svg+xml'
+  ]);
+
+  const extension = path.extname(file.originalname || '').toLowerCase();
+  const allowedExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.heic', '.heif', '.svg']);
+
+  if (allowedTypes.has(file.mimetype) || (file.mimetype.startsWith('image/') && allowedExtensions.has(extension))) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.'));
+    cb(new Error('Invalid file type. Please upload a valid image file.'));
   }
 };
 
@@ -31,6 +45,6 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB
+    fileSize: 10 * 1024 * 1024 // 10MB
   }
 });

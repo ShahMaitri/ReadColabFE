@@ -1,10 +1,66 @@
 // import QRCode from 'qrcode'; // TODO: Install qrcode package - npm install qrcode
+import fs from 'fs/promises';
+import path from 'path';
 import { bookRepository, CreateBookInput, UpdateBookInput, BookFilterOptions, PaginationOptions, SortOptions } from '../repositories/book.repository';
 import { AppError } from '../utils/appError';
 import { Book } from '@prisma/client';
+import { logger } from '../config/logger';
+import { reviewRepository } from '../repositories/review.repository';
+
+type BookWithReviewStats = Book & {
+  averageRating: number;
+  totalReviews: number;
+  reviews?: { rating: number }[];
+};
+
+const mapBookWithReviewStats = async (book: BookWithReviewStats): Promise<BookWithReviewStats> => {
+  const reviewSource = book.reviews || [];
+  const totalReviews = reviewSource.length;
+  const localAverage = totalReviews > 0
+    ? Math.round((reviewSource.reduce((sum, review) => sum + review.rating, 0) / totalReviews) * 10) / 10
+    : 0;
+
+  if (totalReviews > 0) {
+    return {
+      ...book,
+      averageRating: localAverage,
+      totalReviews
+    };
+  }
+
+  const { average, count } = await reviewRepository.getAverageRating(book.id);
+
+  return {
+    ...book,
+    averageRating: Math.round(average * 10) / 10,
+    totalReviews: count
+  };
+};
 
 export class BookService {
-  async createBook(data: CreateBookInput): Promise<Book> {
+  private async removeCoverFileIfPresent(coverPath?: string | null): Promise<void> {
+    if (!coverPath || !coverPath.startsWith('/uploads/covers/')) {
+      return;
+    }
+
+    const uploadsCoversDir = path.resolve(process.cwd(), 'uploads', 'covers');
+    const targetPath = path.resolve(process.cwd(), coverPath.replace(/^\//, ''));
+
+    if (!targetPath.startsWith(`${uploadsCoversDir}${path.sep}`)) {
+      logger.warn(`Skipped deleting cover outside uploads/covers: ${coverPath}`);
+      return;
+    }
+
+    try {
+      await fs.unlink(targetPath);
+    } catch (error: any) {
+      if (error?.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+  }
+
+  async createBook(data: CreateBookInput): Promise<BookWithReviewStats> {
     // Validate input
     if (!data.title || !data.author) {
       throw new AppError('Title and author are required', 400);
@@ -30,15 +86,16 @@ export class BookService {
     //   // Continue even if QR code generation fails
     // }
 
-    return book;
+    return { ...book, averageRating: 0, totalReviews: 0 };
   }
 
-  async getBook(id: string): Promise<Book> {
+  async getBook(id: string): Promise<BookWithReviewStats> {
     const book = await bookRepository.findById(id);
     if (!book) {
       throw new AppError('Book not found', 404);
     }
-    return book;
+
+    return mapBookWithReviewStats(book as BookWithReviewStats);
   }
 
   async getBooks(
@@ -48,7 +105,7 @@ export class BookService {
     category?: string,
     sortBy: string = 'createdAt',
     sortOrder: 'asc' | 'desc' = 'desc'
-  ): Promise<{ data: Book[]; total: number; page: number; limit: number; pages: number }> {
+  ): Promise<{ data: BookWithReviewStats[]; total: number; page: number; limit: number; pages: number }> {
     const pagination: PaginationOptions = { page: Math.max(1, page), limit: Math.min(100, limit) };
     const sort: SortOptions = {
       sortBy: (sortBy as any) || 'createdAt',
@@ -60,9 +117,10 @@ export class BookService {
     if (category) filters.category = category;
 
     const { data, total } = await bookRepository.findAll(pagination, sort, filters);
+    const books = await Promise.all(data.map((book) => mapBookWithReviewStats(book as BookWithReviewStats)));
 
     return {
-      data,
+      data: books,
       total,
       page: pagination.page,
       limit: pagination.limit,
@@ -70,7 +128,7 @@ export class BookService {
     };
   }
 
-  async updateBook(id: string, data: UpdateBookInput): Promise<Book> {
+  async updateBook(id: string, data: UpdateBookInput): Promise<BookWithReviewStats> {
     // Verify book exists
     await this.getBook(id);
 
@@ -82,19 +140,39 @@ export class BookService {
       }
     }
 
-    return bookRepository.update(id, data);
+    const book = await bookRepository.update(id, data);
+    return { ...book, averageRating: 0, totalReviews: 0 };
   }
 
-  async deleteBook(id: string): Promise<Book> {
+  async deleteBook(id: string): Promise<BookWithReviewStats> {
     // Verify book exists
     await this.getBook(id);
-    return bookRepository.delete(id);
+    const book = await bookRepository.delete(id);
+    return { ...book, averageRating: 0, totalReviews: 0 };
   }
 
-  async uploadCover(id: string, coverPath: string): Promise<Book> {
+  async uploadCover(id: string, coverPath: string): Promise<BookWithReviewStats> {
     // Verify book exists
     await this.getBook(id);
-    return bookRepository.updateCover(id, coverPath);
+    const book = await bookRepository.updateCover(id, coverPath);
+    return { ...book, averageRating: 0, totalReviews: 0 };
+  }
+
+  async removeCover(id: string): Promise<BookWithReviewStats> {
+    const currentBook = await this.getBook(id);
+    const book = await bookRepository.removeCover(id);
+
+    try {
+      await this.removeCoverFileIfPresent(currentBook.cover);
+    } catch (error) {
+      logger.error('Failed to remove cover file from disk', {
+        bookId: id,
+        coverPath: currentBook.cover,
+        error
+      });
+    }
+
+    return { ...book, averageRating: 0, totalReviews: 0 };
   }
 
   async generateQRCode(bookId: string): Promise<string> {
@@ -117,13 +195,13 @@ export class BookService {
     return bookRepository.getCategories();
   }
 
-  async searchBooks(query: string, limit: number = 10): Promise<Book[]> {
+  async searchBooks(query: string, limit: number = 10): Promise<BookWithReviewStats[]> {
     const { data } = await bookRepository.findAll(
       { page: 1, limit },
       { sortBy: 'title', sortOrder: 'asc' },
       { search: query }
     );
-    return data;
+    return Promise.all(data.map((book) => mapBookWithReviewStats(book as BookWithReviewStats)));
   }
 }
 

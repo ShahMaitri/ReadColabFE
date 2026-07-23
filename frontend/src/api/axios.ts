@@ -29,6 +29,15 @@ const processQueue = (error: AxiosError | null): void => {
 apiClient.interceptors.request.use((config) => {
   const token = authStorage.getAccessToken();
 
+  // Let the browser set multipart boundaries for FormData uploads.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    if (config.headers && typeof (config.headers as any).delete === 'function') {
+      (config.headers as any).delete('Content-Type');
+    } else if (config.headers) {
+      delete (config.headers as any)['Content-Type'];
+    }
+  }
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
