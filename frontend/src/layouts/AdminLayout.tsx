@@ -18,11 +18,11 @@ import {
 import { useState } from 'react';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PeopleIcon from '@mui/icons-material/People';
-import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
-import EventNoteIcon from '@mui/icons-material/EventNote';
-import BookmarkIconOutlined from '@mui/icons-material/BookmarkBorder';
+import RateReviewIcon from '@mui/icons-material/RateReview';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const DRAWER_WIDTH = 240;
@@ -53,9 +53,9 @@ export const AdminLayout = () => {
   const menuItems = [
     { label: 'Dashboard', path: '/admin', icon: <DashboardIcon /> },
     { label: 'Manage Users', path: '/admin/users', icon: <PeopleIcon /> },
-    { label: 'Borrow Requests', path: '/admin/borrows', icon: <LibraryBooksIcon /> },
-    { label: 'Reservations', path: '/admin/reservations', icon: <BookmarkIconOutlined /> },
-    { label: 'Reviews', path: '/admin/reviews', icon: <EventNoteIcon /> }
+    { label: 'Borrow Requests', path: '/admin/borrows', icon: <AssignmentTurnedInIcon /> },
+    { label: 'Reservations', path: '/admin/reservations', icon: <EventAvailableIcon /> },
+    { label: 'Reviews', path: '/admin/reviews', icon: <RateReviewIcon /> }
   ];
 
   const isActive = (path: string) => {

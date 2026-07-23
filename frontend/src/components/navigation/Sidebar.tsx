@@ -1,14 +1,15 @@
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import AutoStoriesRoundedIcon from '@mui/icons-material/AutoStoriesRounded';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import HistoryIcon from '@mui/icons-material/History';
 import InsightsIcon from '@mui/icons-material/Insights';
-import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
-import EventNoteIcon from '@mui/icons-material/EventNote';
 import PeopleIcon from '@mui/icons-material/People';
-import BookmarkIconOutlined from '@mui/icons-material/BookmarkBorder';
+import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Stack, Typography } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -75,7 +76,7 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
             </ListItemButton>
             <ListItemButton component={NavLink} to='/' sx={navItemSx}>
               <ListItemIcon>
-                <DashboardIcon />
+                <BarChartIcon />
               </ListItemIcon>
               <ListItemText primary='Statistics' />
             </ListItemButton>
@@ -85,7 +86,7 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
             <ListItemIcon>
               <DashboardIcon />
             </ListItemIcon>
-            <ListItemText primary='Statistics' />
+            <ListItemText primary='Dashboard' />
           </ListItemButton>
         )}
         <ListItemButton component={NavLink} to='/books' sx={navItemSx}>
@@ -121,7 +122,7 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
         {!isAdmin && (
           <ListItemButton component={NavLink} to='/my-reviews' sx={navItemSx}>
             <ListItemIcon>
-              <EventNoteIcon />
+              <RateReviewIcon />
             </ListItemIcon>
             <ListItemText primary='My Reviews' />
           </ListItemButton>
@@ -137,7 +138,7 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
         {isAdmin && (
           <ListItemButton component={NavLink} to='/admin/borrows' sx={navItemSx}>
             <ListItemIcon>
-              <LibraryBooksIcon />
+              <AssignmentTurnedInIcon />
             </ListItemIcon>
             <ListItemText primary='Borrow Approvals' />
           </ListItemButton>
@@ -145,7 +146,7 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
         {isAdmin && (
           <ListItemButton component={NavLink} to='/admin/reservations' sx={navItemSx}>
             <ListItemIcon>
-              <BookmarkIconOutlined />
+              <EventAvailableIcon />
             </ListItemIcon>
             <ListItemText primary='Reservations' />
           </ListItemButton>
@@ -153,7 +154,7 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
         {isAdmin && (
           <ListItemButton component={NavLink} to='/admin/reviews' sx={navItemSx}>
             <ListItemIcon>
-              <EventNoteIcon />
+              <RateReviewIcon />
             </ListItemIcon>
             <ListItemText primary='Reviews' />
           </ListItemButton>

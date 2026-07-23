@@ -63,8 +63,18 @@ const StatCard = ({
   color: string;
 }) => (
   <Card sx={{ height: '100%' }}>
-    <CardContent>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+    <CardContent
+      sx={{
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        py: 2,
+        '&:last-child': {
+          pb: 2
+        }
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
         <Box
           sx={{
             p: 1.5,
@@ -171,6 +181,24 @@ export const AdminDashboard = () => {
   const chartTooltipItemStyle = {
     color: theme.palette.text.primary
   };
+  const renderPieSliceLabel = (labelKey: 'status' | 'role') => (props: any) => {
+    const { x, y, payload } = props;
+
+    if (typeof x !== 'number' || typeof y !== 'number') {
+      return null;
+    }
+
+    return (
+      <text x={x} y={y} textAnchor='middle' fill={theme.palette.text.primary} fontSize={10}>
+        <tspan x={x} dy='-0.2em'>
+          {payload?.[labelKey] ?? ''}
+        </tspan>
+        <tspan x={x} dy='1.1em'>
+          {payload?.count ?? 0}
+        </tspan>
+      </text>
+    );
+  };
 
   return (
     <Container maxWidth="xl" sx={{ py: { xs: 2.5, md: 4 } }}>
@@ -187,8 +215,8 @@ export const AdminDashboard = () => {
               : `linear-gradient(120deg, ${alpha(theme.palette.primary.light, 0.24)} 0%, ${alpha('#ffffff', 0.96)} 100%)`
         }}
       >
-        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' spacing={2}>
-          <Box>
+        <Stack direction='row' justifyContent='space-between' alignItems='center' spacing={2}>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography variant="h4" sx={{ fontWeight: 800 }}>
               Admin Dashboard
             </Typography>
@@ -196,38 +224,101 @@ export const AdminDashboard = () => {
               Operations health, borrowing trends, and user behavior in one view.
             </Typography>
           </Box>
-          <Stack direction='row' spacing={1} alignItems='center'>
-            <Chip size='small' variant='outlined' label={`${stats.totalUsers} users`} />
-            <Chip size='small' variant='outlined' label={`${stats.activeLoans} active loans`} />
+          <Stack
+            direction='row'
+            spacing={1}
+            flexWrap='wrap'
+            useFlexGap
+            sx={{
+              ml: 'auto',
+              width: 'fit-content',
+              justifyContent: 'flex-end',
+              alignSelf: 'center'
+            }}
+          >
+            <Chip
+              size='small'
+              variant='outlined'
+              label={
+                <Stack spacing={0.45} sx={{ alignItems: 'center', py: 0.35 }}>
+                  <Typography variant='subtitle2' sx={{ fontWeight: 700, lineHeight: 1.05 }}>
+                    {stats.totalUsers}
+                  </Typography>
+                  <Typography variant='caption' sx={{ lineHeight: 1.05 }}>
+                    Users
+                  </Typography>
+                </Stack>
+              }
+              sx={{
+                bgcolor: alpha(theme.palette.background.paper, 0.6),
+                height: 'auto',
+                '& .MuiChip-label': {
+                  px: 1.25,
+                  pt: 1.2,
+                  pb: 1,
+                  display: 'flex',
+                  alignItems: 'center'
+                }
+              }}
+            />
+            <Chip
+              size='small'
+              variant='outlined'
+              label={
+                <Stack spacing={0.45} sx={{ alignItems: 'center', py: 0.35 }}>
+                  <Typography variant='subtitle2' sx={{ fontWeight: 700, lineHeight: 1.05 }}>
+                    {stats.activeLoans}
+                  </Typography>
+                  <Typography variant='caption' sx={{ lineHeight: 1.05 }}>
+                    Active Loans
+                  </Typography>
+                </Stack>
+              }
+              sx={{
+                bgcolor: alpha(theme.palette.background.paper, 0.6),
+                height: 'auto',
+                '& .MuiChip-label': {
+                  px: 1.25,
+                  pt: 1.2,
+                  pb: 1,
+                  display: 'flex',
+                  alignItems: 'center'
+                }
+              }}
+            />
           </Stack>
         </Stack>
       </Paper>
 
       {/* Statistics Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Total Books" value={stats.totalBooks} icon={BookIcon} color="#3498db" />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Total Users" value={stats.totalUsers} icon={PeopleIcon} color="#2ecc71" />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Active Loans"
-            value={stats.activeLoans}
-            icon={AutorenewIcon}
-            color="#f39c12"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Total Reservations"
-            value={stats.totalReservations}
-            icon={EventIcon}
-            color="#9b59b6"
-          />
-        </Grid>
-      </Grid>
+      <Box
+        sx={{
+          mb: 4,
+          width: '100%',
+          display: 'grid',
+          gap: 3,
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(4, minmax(0, 1fr))'
+          }
+        }}
+      >
+        <StatCard title="Total Books" value={stats.totalBooks} icon={BookIcon} color="#3498db" />
+        <StatCard title="Total Users" value={stats.totalUsers} icon={PeopleIcon} color="#2ecc71" />
+        <StatCard
+          title="Active Loans"
+          value={stats.activeLoans}
+          icon={AutorenewIcon}
+          color="#f39c12"
+        />
+        <StatCard
+          title="Total Reservations"
+          value={stats.totalReservations}
+          icon={EventIcon}
+          color="#9b59b6"
+        />
+      </Box>
 
       {/* Overdue Warning */}
       {overdueStats && overdueStats.overdueCount > 0 && (
@@ -245,9 +336,19 @@ export const AdminDashboard = () => {
       )}
 
       {/* Charts Grid */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Box
+        sx={{
+          mb: 4,
+          display: 'grid',
+          gap: 3,
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: 'repeat(2, minmax(0, 1fr))'
+          }
+        }}
+      >
         {/* Borrow Trend Chart */}
-        <Grid item xs={12} md={6}>
+        <Box>
           <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Borrow Trend (Last 30 Days)
@@ -283,10 +384,10 @@ export const AdminDashboard = () => {
               )}
             </Box>
           </Paper>
-        </Grid>
+        </Box>
 
         {/* Borrow Status Distribution */}
-        <Grid item xs={12} md={6}>
+        <Box>
           <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Borrow Status
@@ -299,8 +400,9 @@ export const AdminDashboard = () => {
                       data={borrowStatus}
                       cx="50%"
                       cy="46%"
+                      nameKey="status"
                       labelLine={false}
-                      label={isSmallScreen ? false : ((entry: any) => `${entry?.status ?? ''}: ${entry?.count ?? 0}`)}
+                      label={isSmallScreen ? false : renderPieSliceLabel('status')}
                       outerRadius={isSmallScreen ? '62%' : '72%'}
                       fill="#8884d8"
                       dataKey="count"
@@ -310,7 +412,7 @@ export const AdminDashboard = () => {
                       ))}
                     </Pie>
                     <Tooltip />
-                    <Legend verticalAlign='bottom' height={36} wrapperStyle={{ fontSize: 12 }} />
+                    <Legend verticalAlign='bottom' height={36} wrapperStyle={{ fontSize: 10 }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -320,10 +422,10 @@ export const AdminDashboard = () => {
               )}
             </Box>
           </Paper>
-        </Grid>
+        </Box>
 
         {/* Most Borrowed Books */}
-        <Grid item xs={12} md={6}>
+        <Box>
           <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Most Borrowed Books
@@ -360,10 +462,10 @@ export const AdminDashboard = () => {
             )}
             </Box>
           </Paper>
-        </Grid>
+        </Box>
 
         {/* Category Borrow Stats */}
-        <Grid item xs={12} md={6}>
+        <Box>
           <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Borrows by Category
@@ -410,10 +512,10 @@ export const AdminDashboard = () => {
               )}
             </Box>
           </Paper>
-        </Grid>
+        </Box>
 
         {/* Users by Role */}
-        <Grid item xs={12} md={6}>
+        <Box>
           <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Users by Role
@@ -426,8 +528,9 @@ export const AdminDashboard = () => {
                     data={usersByRole}
                     cx="50%"
                     cy="46%"
+                    nameKey="role"
                     labelLine={false}
-                    label={isSmallScreen ? false : ((entry: any) => `${entry?.role ?? ''}: ${entry?.count ?? 0}`)}
+                    label={isSmallScreen ? false : renderPieSliceLabel('role')}
                     outerRadius={isSmallScreen ? '62%' : '72%'}
                     fill="#8884d8"
                     dataKey="count"
@@ -447,10 +550,10 @@ export const AdminDashboard = () => {
             )}
             </Box>
           </Paper>
-        </Grid>
+        </Box>
 
         {/* Least Borrowed Books */}
-        <Grid item xs={12} md={6}>
+        <Box>
           <Paper elevation={0} sx={chartCardSx}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
               Least Borrowed Books
@@ -493,8 +596,8 @@ export const AdminDashboard = () => {
             )}
             </Box>
           </Paper>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* Late Returns Table */}
       {lateReturns && lateReturns.length > 0 && (

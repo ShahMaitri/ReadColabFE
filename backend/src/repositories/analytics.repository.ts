@@ -138,32 +138,47 @@ export class AnalyticsRepository {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const borrows = await prisma.borrow.groupBy({
-      by: ['createdAt'],
-      _count: {
-        id: true
-      },
+    const borrows = await prisma.borrow.findMany({
       where: {
-        createdAt: {
-          gte: startDate
-        }
+        OR: [
+          {
+            borrowDate: {
+              gte: startDate
+            }
+          },
+          {
+            createdAt: {
+              gte: startDate
+            }
+          }
+        ]
+      },
+      select: {
+        borrowDate: true,
+        createdAt: true
       },
       orderBy: {
         createdAt: 'asc'
       }
     });
 
-    // Group by date (day only)
+    // Group by borrow day first; fallback to created day when borrowDate is missing.
     const grouped: Record<string, number> = {};
-    borrows.forEach((item: any) => {
-      const date = item.createdAt.toISOString().split('T')[0];
-      grouped[date] = (grouped[date] || 0) + item._count.id;
+    borrows.forEach((item) => {
+      const eventDate = item.borrowDate ?? item.createdAt;
+      if (eventDate < startDate) {
+        return;
+      }
+      const date = eventDate.toISOString().split('T')[0];
+      grouped[date] = (grouped[date] || 0) + 1;
     });
 
-    return Object.entries(grouped).map(([date, count]: any) => ({
-      date,
-      count
-    }));
+    return Object.entries(grouped)
+      .map(([date, count]: any) => ({
+        date,
+        count
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
   }
 
   async getUsersByRole() {
