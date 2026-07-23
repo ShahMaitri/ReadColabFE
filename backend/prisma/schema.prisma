@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enums converted to comments for SQLite compatibility
+// enum UserRole { EMPLOYEE, ADMIN, SUPER_ADMIN }
+// enum BorrowStatus { PENDING, APPROVED, REJECTED, BORROWED, RETURNED, OVERDUE }
+// enum BookStatus { AVAILABLE, ARCHIVED, OUT_OF_STOCK }
+// enum ReservationStatus { PENDING, READY, CANCELLED }
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("EMPLOYEE") // "EMPLOYEE" | "ADMIN" | "SUPER_ADMIN"
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  books        Book[]
+  borrows      Borrow[]           @relation("userBorrows")
+  reservations Reservation[]      @relation("userReservations")
+  reviews      Review[]
+  wishlist     Wishlist[]
+  notifications Notification[]
+}
+
+model Book {
+  id               String     @id @default(cuid())
+  title            String
+  author           String
+  isbn             String?    @unique
+  description      String?
+  publicationDate  DateTime?
+  category         String?
+  quantity         Int        @default(1)
+  availableQuantity Int       @default(1)
+  cover            String?
+  qrCode           String?    @unique
+  status           String     @default("AVAILABLE") // "AVAILABLE" | "ARCHIVED" | "OUT_OF_STOCK"
+  addedBy          String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  addedByUser  User?           @relation(fields: [addedBy], references: [id])
+  borrows      Borrow[]        @relation("bookBorrows")
+  reservations Reservation[]   @relation("bookReservations")
+  reviews      Review[]
+  wishlist     Wishlist[]
+
+  @@index([title])
+  @@index([author])
+  @@index([category])
+  @@index([status])
+}
+
+model Borrow {
+  id           String       @id @default(cuid())
+  userId       String
+  bookId       String
+  status       String       @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED" | "BORROWED" | "RETURNED" | "OVERDUE"
+  borrowDate   DateTime?
+  dueDate      DateTime?
+  returnDate   DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user  User  @relation("userBorrows", fields: [userId], references: [id], onDelete: Cascade)
+  book  Book  @relation("bookBorrows", fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([bookId])
+  @@index([status])
+}
+
+model Reservation {
+  id        String   @id @default(cuid())
+  userId    String
+  bookId    String
+  status    String   @default("PENDING") // "PENDING" | "READY" | "CANCELLED"
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation("userReservations", fields: [userId], references: [id], onDelete: Cascade)
+  book  Book  @relation("bookReservations", fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([userId])
+  @@index([bookId])
+  @@index([status])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  bookId    String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book  Book  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([bookId])
+  @@index([rating])
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  bookId    String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book  Book  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([userId])
+}
+
+model Notification {
+  id                String   @id @default(cuid())
+  userId            String
+  type              String
+  title             String
+  message           String
+  metadata          String?
+  referenceType     String?
+  referenceId       String?
+  dedupeKey         String?  @unique
+  channel           String   @default("IN_APP") // "IN_APP" | "EMAIL" | "TEAMS"
+  deliveryStatus    String   @default("PENDING") // "PENDING" | "SENT" | "FAILED"
+  externalProvider  String?
+  externalMessageId String?
+  isRead            Boolean  @default(false)
+  readAt            DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, isRead])
+}
