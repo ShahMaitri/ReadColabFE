@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AppLayout } from '../layouts/AppLayout';
+import { AuthLayout } from '../layouts/AuthLayout';
 import { SplashScreen } from '../components/feedback/SplashScreen';
 import { DashboardPage } from '../pages/DashboardPage';
 import { ErrorPage } from '../pages/ErrorPage';
@@ -15,6 +16,11 @@ import { BorrowHistoryPage } from '../pages/BorrowHistoryPage';
 import { WishlistPage } from '../pages/WishlistPage';
 import { MyReviewsPage } from '../pages/MyReviewsPage';
 import { ReportsPage } from '../pages/ReportsPage';
+import { BrowsePersonalBooksPage } from '../pages/BrowsePersonalBooksPage';
+import { MyPersonalBooksPage } from '../pages/MyPersonalBooksPage';
+import { MyBorrowedBooksPage } from '../pages/MyBorrowedBooksPage';
+import { PendingRequestsPage } from '../pages/PendingRequestsPage';
+import { PersonalLibrarySettingsPage } from '../pages/PersonalLibrarySettingsPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AdminRoute } from './AdminRoute';
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
@@ -66,8 +72,10 @@ export const AppRouter = () => {
 
   return (
     <Routes>
-      <Route path='/login' element={<LoginPage />} />
-      <Route path='/register' element={<RegisterPage />} />
+      <Route element={<AuthLayout />}>
+        <Route path='/login' element={<LoginPage />} />
+        <Route path='/register' element={<RegisterPage />} />
+      </Route>
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
@@ -81,6 +89,13 @@ export const AppRouter = () => {
           <Route path='/my-reviews' element={<MyReviewsPage />} />
           <Route path='/borrow-history' element={<BorrowHistoryPage />} />
           <Route path='/reports' element={<ReportsPage />} />
+
+          {/* Personal Library Routes */}
+          <Route path='/personal-library' element={<BrowsePersonalBooksPage />} />
+          <Route path='/personal-library/my-books' element={<MyPersonalBooksPage />} />
+          <Route path='/personal-library/borrowed' element={<MyBorrowedBooksPage />} />
+          <Route path='/personal-library/requests' element={<PendingRequestsPage />} />
+          <Route path='/personal-library/settings' element={<PersonalLibrarySettingsPage />} />
 
           <Route element={<AdminRoute />}>
             <Route path='/admin' element={<AdminDashboard />} />

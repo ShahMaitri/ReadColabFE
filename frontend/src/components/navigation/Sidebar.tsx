@@ -9,6 +9,8 @@ import HistoryIcon from '@mui/icons-material/History';
 import InsightsIcon from '@mui/icons-material/Insights';
 import PeopleIcon from '@mui/icons-material/People';
 import RateReviewIcon from '@mui/icons-material/RateReview';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ShareIcon from '@mui/icons-material/Share';
 import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Stack, Typography } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 import { AnimatedBookLogo } from '../branding/AnimatedBookLogo';
@@ -116,6 +118,47 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
             </ListItemIcon>
             <ListItemText primary='My Reviews' />
           </ListItemButton>
+        )}
+
+        {/* Personal Library Section */}
+        {!isAdmin && (
+          <>
+            <Box sx={{ px: 2, mt: 2, mb: 1 }}>
+              <Typography variant='caption' sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                PERSONAL LIBRARY
+              </Typography>
+            </Box>
+            <ListItemButton component={NavLink} to='/personal-library' end sx={navItemSx}>
+              <ListItemIcon>
+                <ShareIcon />
+              </ListItemIcon>
+              <ListItemText primary='Browse Books' />
+            </ListItemButton>
+            <ListItemButton component={NavLink} to='/personal-library/my-books' sx={navItemSx}>
+              <ListItemIcon>
+                <LocalLibraryIcon />
+              </ListItemIcon>
+              <ListItemText primary='My Shared Books' />
+            </ListItemButton>
+            <ListItemButton component={NavLink} to='/personal-library/borrowed' sx={navItemSx}>
+              <ListItemIcon>
+                <HistoryIcon />
+              </ListItemIcon>
+              <ListItemText primary='My Requests' />
+            </ListItemButton>
+            <ListItemButton component={NavLink} to='/personal-library/requests' sx={navItemSx}>
+              <ListItemIcon>
+                <AssignmentTurnedInIcon />
+              </ListItemIcon>
+              <ListItemText primary='Borrow Requests' />
+            </ListItemButton>
+            <ListItemButton component={NavLink} to='/personal-library/settings' sx={navItemSx}>
+              <ListItemIcon>
+                <SettingsIcon />
+              </ListItemIcon>
+              <ListItemText primary='Library Settings' />
+            </ListItemButton>
+          </>
         )}
         {isAdmin && (
           <ListItemButton component={NavLink} to='/admin/users' sx={navItemSx}>

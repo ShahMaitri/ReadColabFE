@@ -11,6 +11,7 @@ import adminRouter from '../admin/routes';
 import { notificationsRouter } from '../notifications';
 import { createAIRoutes } from '../ai/routes';
 import { AIConfig } from '../config/ai.config';
+import { personalBooksRouter } from '../personalBooks/routes';
 
 export const v1Router = Router();
 
@@ -31,3 +32,4 @@ v1Router.use('/analytics', analyticsRouter);
 v1Router.use('/admin', adminRouter);
 v1Router.use('/users', Router());
 v1Router.use('/notifications', notificationsRouter);
+v1Router.use('/personal-books', personalBooksRouter);

@@ -23,12 +23,20 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Office Library Relations
   books        Book[]
   borrows      Borrow[]           @relation("userBorrows")
   reservations Reservation[]      @relation("userReservations")
   reviews      Review[]
   wishlist     Wishlist[]
   notifications Notification[]
+
+  // Personal Book Sharing Relations
+  personalBooksOwned          PersonalBook[]                   @relation("personalBooksOwned")
+  personalBorrowRequestsAsOwner   PersonalBorrowRequest[]      @relation("personalBorrowRequestsAsOwner")
+  personalBorrowRequestsAsRequester PersonalBorrowRequest[]    @relation("personalBorrowRequestsAsRequester")
+  personalBookReviews         PersonalBookReview[]             @relation("personalBookReviews")
+  personalSharingSettings     PersonalBookSharingSettings?     @relation("personalSharingSettings")
 }
 
 model Book {
@@ -150,4 +158,99 @@ model Notification {
 
   @@index([userId, createdAt])
   @@index([userId, isRead])
+}
+
+// ========================
+// Personal Book Sharing
+// ========================
+
+model PersonalBook {
+  id                String   @id @default(cuid())
+  ownerId           String
+  title             String
+  author            String
+  publisher         String?
+  isbn              String?
+  category          String?
+  description       String?
+  condition         String   @default("GOOD") // "NEW" | "EXCELLENT" | "GOOD" | "FAIR" | "OLD" | "DAMAGED"
+  language          String   @default("ENGLISH")
+  edition           String?
+  coverImage        String?
+  location          String?
+  availabilityStatus String  @default("AVAILABLE") // "AVAILABLE" | "RESERVED" | "BORROWED" | "UNAVAILABLE" | "SOLD" | "DONATED"
+  visibility        String   @default("VISIBLE_TO_EVERYONE") // "VISIBLE_TO_EVERYONE" | "VISIBLE_TO_DEPARTMENT" | "HIDDEN"
+  borrowCount       Int      @default(0)
+  averageRating     Float    @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  owner             User                   @relation("personalBooksOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+  borrowRequests    PersonalBorrowRequest[]
+  reviews           PersonalBookReview[]
+
+  @@index([ownerId])
+  @@index([title])
+  @@index([author])
+  @@index([category])
+  @@index([availabilityStatus])
+  @@index([visibility])
+}
+
+model PersonalBorrowRequest {
+  id            String   @id @default(cuid())
+  bookId        String
+  ownerId       String
+  requesterId   String
+  status        String   @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED" | "BORROWED" | "RETURNED" | "OVERDUE"
+  requestDate   DateTime @default(now())
+  approvedDate  DateTime?
+  borrowDate    DateTime?
+  dueDate       DateTime?
+  returnDate    DateTime?
+  remarks       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  book         PersonalBook @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  owner        User         @relation("personalBorrowRequestsAsOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  requester    User         @relation("personalBorrowRequestsAsRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, requesterId])
+  @@index([bookId])
+  @@index([ownerId])
+  @@index([requesterId])
+  @@index([status])
+}
+
+model PersonalBookReview {
+  id        String   @id @default(cuid())
+  bookId    String
+  userId    String
+  rating    Int
+  comment   String?
+  reviewType String @default("BOOK") // "BOOK" | "OWNER" | "BORROW_EXPERIENCE"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  book  PersonalBook @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user  User         @relation("personalBookReviews", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, userId, reviewType])
+  @@index([bookId])
+  @@index([userId])
+  @@index([rating])
+}
+
+model PersonalBookSharingSettings {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  sharingEnabled         Boolean  @default(true)
+  autoApproveRequests    Boolean  @default(false)
+  maxActiveLendingLoans  Int      @default(5)
+  defaultBorrowDuration  Int      @default(14) // days
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  user User @relation("personalSharingSettings", fields: [userId], references: [id], onDelete: Cascade)
 }

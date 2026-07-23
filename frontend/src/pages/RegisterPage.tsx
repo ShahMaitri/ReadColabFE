@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Button, Card, CardContent, Stack, TextField, Typography, Alert, Link as MuiLink } from '@mui/material';
+import { Button, Card, CardContent, Stack, TextField, Typography, Alert, Link as MuiLink } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -54,17 +54,6 @@ export const RegisterPage = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        p: 2,
-        background: (theme) => theme.palette.mode === 'dark'
-          ? 'radial-gradient(900px 420px at 15% 15%, rgba(192,104,255,0.16), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(120,162,255,0.16), transparent 48%), #0b0b10'
-          : 'radial-gradient(900px 420px at 15% 15%, rgba(161,0,255,0.20), transparent 50%), radial-gradient(800px 380px at 80% 80%, rgba(63,103,234,0.14), transparent 48%), #f6f6f9'
-      }}
-    >
       <Card sx={{ width: '100%', maxWidth: 440, borderRadius: 5 }}>
         <CardContent sx={{ p: 4 }}>
           <Stack spacing={2.5}>
@@ -131,6 +120,5 @@ export const RegisterPage = () => {
           </Stack>
         </CardContent>
       </Card>
-    </Box>
   );
 };
