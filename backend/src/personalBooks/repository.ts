@@ -206,6 +206,12 @@ export class PersonalBookRepository {
     }) as Promise<IPersonalBorrowRequest>;
   }
 
+  async deleteBorrowRequest(id: string): Promise<void> {
+    await this.prisma.personalBorrowRequest.delete({
+      where: { id }
+    });
+  }
+
   async getBorrowRequestsByBook(bookId: string): Promise<IPersonalBorrowRequest[]> {
     return this.prisma.personalBorrowRequest.findMany({
       where: { bookId },

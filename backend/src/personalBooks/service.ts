@@ -128,14 +128,20 @@ export class PersonalBookService {
       throw new AppError('You cannot request your own books', 400);
     }
 
-    // Check if already requested
+    // Check if already requested - only block if there's an active borrow
     const existingRequest = await this.repository.getBorrowRequestsByBook(bookId);
-    if (
-      existingRequest.some(
-        (r) => r.requesterId === requesterId && r.status !== 'REJECTED'
-      )
-    ) {
-      throw new AppError('You already have a pending request for this book', 400);
+    const userRequest = existingRequest.find((r) => r.requesterId === requesterId);
+    
+    if (userRequest) {
+      if (userRequest.status === 'PENDING' || userRequest.status === 'APPROVED' || 
+          userRequest.status === 'BORROWED' || userRequest.status === 'OVERDUE') {
+        throw new AppError('You already have an active request for this book', 400);
+      }
+      
+      // Delete old RETURNED or REJECTED requests to allow new requests
+      if (userRequest.status === 'RETURNED' || userRequest.status === 'REJECTED') {
+        await this.repository.deleteBorrowRequest(userRequest.id);
+      }
     }
 
     // Check if book is available
