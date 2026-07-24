@@ -1,7 +1,6 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LogoutIcon from '@mui/icons-material/Logout';
-import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import MonitorRoundedIcon from '@mui/icons-material/MonitorRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
@@ -27,6 +26,7 @@ import { useQuery } from '@tanstack/react-query';
 import { notificationService } from '../../services/notification.service';
 import { NotificationDrawer, notificationKeys } from '../notifications/NotificationDrawer';
 import { useThemePreference } from '../../context/ThemeContext';
+import { BrandHighlightText } from '../branding/BrandHighlightText';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -79,9 +79,11 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
         </IconButton>
 
         <Box sx={{ flexGrow: 1, minWidth: 180 }}>
-          <Typography variant='h6' sx={{ lineHeight: 1.1 }}>Smart Office Library</Typography>
+          <Typography variant='h6' sx={{ lineHeight: 1.1 }}>
+            <BrandHighlightText>Read Colab</BrandHighlightText>
+          </Typography>
           <Typography variant='caption' color='text.secondary' sx={{ lineHeight: 1.1 }}>
-            Enterprise Workspace
+            Smart Office Library
           </Typography>
         </Box>
 
@@ -107,9 +109,9 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
         />
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-          <Tooltip title={`Theme: ${preference} (${resolvedMode})`}>
+          <Tooltip title='Theme Settings'>
             <IconButton size='small' onClick={(event) => setThemeAnchor(event.currentTarget)}>
-              {preference === 'system' ? <MonitorRoundedIcon fontSize='small' /> : resolvedMode === 'dark' ? <DarkModeRoundedIcon fontSize='small' /> : <LightModeRoundedIcon fontSize='small' />}
+              <LightModeRoundedIcon fontSize='small' />
             </IconButton>
           </Tooltip>
 
@@ -122,9 +124,6 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
           >
             <MenuItem selected={preference === 'light'} onClick={() => { setPreference('light'); setThemeAnchor(null); }}>
               <LightModeRoundedIcon fontSize='small' sx={{ mr: 1 }} /> Light
-            </MenuItem>
-            <MenuItem selected={preference === 'dark'} onClick={() => { setPreference('dark'); setThemeAnchor(null); }}>
-              <DarkModeRoundedIcon fontSize='small' sx={{ mr: 1 }} /> Dark
             </MenuItem>
             <MenuItem selected={preference === 'system'} onClick={() => { setPreference('system'); setThemeAnchor(null); }}>
               <MonitorRoundedIcon fontSize='small' sx={{ mr: 1 }} /> System

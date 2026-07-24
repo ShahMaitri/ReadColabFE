@@ -36,7 +36,7 @@ export const SplashScreen = () => {
               <BrandHighlightText animate>Read Colab</BrandHighlightText>
             </Typography>
             <Typography variant='body2' color='text.secondary'>
-              Enterprise reading workspace - Smart Office Library
+              Smart Office Library
             </Typography>
           </Box>
 

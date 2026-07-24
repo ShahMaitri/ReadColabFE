@@ -2,7 +2,7 @@
 
 Production-ready backend boilerplate using:
 - Node.js + Express + TypeScript
-- Prisma ORM + PostgreSQL
+- Prisma ORM + SQLite
 - JWT + bcrypt
 - Multer
 - Winston + Morgan
@@ -20,6 +20,8 @@ Production-ready backend boilerplate using:
    npm run prisma:generate
 4. Run in development:
    npm run dev
+
+The server listens on `http://127.0.0.1:4000` by default.
 
 ## API
 

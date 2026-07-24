@@ -10,6 +10,7 @@
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "node prisma/seed.js",
     "prisma:studio": "prisma studio",
     "typecheck": "tsc --noEmit",
     "test:notifications:smoke": "node scripts/notification-smoke-flow.mjs",

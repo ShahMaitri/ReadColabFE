@@ -8,6 +8,36 @@ your assistant should leave these as prompts, not guess or fabricate content.
 
 # Read Colab — Smart Office Library
 
+## 🚀 Quick Setup
+
+**Use the launcher that matches your shell to bootstrap dependencies, Prisma, and the dev servers automatically.**
+
+```bash
+# macOS / Linux / Git Bash
+./dev.sh
+
+# Windows PowerShell
+./dev.ps1
+
+# Any platform with Node.js installed
+node dev.mjs
+```
+
+The launcher will install missing dependencies, create a local SQLite `.env` if one is missing, run Prisma migrations and seed the default users, then start the backend, frontend, and Prisma Studio.
+
+If you want a quick sanity check without starting services, run `node dev.mjs --check`.
+
+### Default Login Credentials
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@bookhive.com | Admin@123 |
+| Employee | employee@bookhive.com | Employee@123 |
+
+> **Note:** After first setup, you can register additional employee accounts using the registration page.
+
+---
+
 ## 1. Problem & Target User  [HUMAN-FILL]
 <!--
 Answer specifically:
@@ -16,6 +46,18 @@ Answer specifically:
 Do NOT let your AI assistant write this section. If it's empty, jury will ask why.
 -->
 
+**Target User:** Office employees and knowledge workers in professional/corporate environments who use physical books for learning, reference, and professional development.
+
+**Problem:** 
+- **Office libraries** lack centralized discovery and management—employees don't know what books are available, have to manually check with admins, and lending is untracked or paper-based, leading to lost books and poor accountability.
+- **Personal book sharing** is impossible at scale—colleagues with books relevant to their peers have no platform to lend them, so books remain unused on personal shelves while others buy duplicates or struggle to find resources.
+
+**Why inadequate today:**
+- Manual processes are time-consuming and error-prone (overdue tracking, availability updates)
+- Books are siloed (either in library storage or on personal shelves with no visibility to peers)
+- No record of lending history, ratings, or recommendations, so employees make uninformed choices
+- New employees struggle to find knowledge resources quickly
+
 ## 2. Solution Overview & Core User Flow  [HUMAN-FILL]
 <!--
 2-4 sentence summary, PLUS a literal step-by-step flow:
@@ -23,6 +65,24 @@ Do NOT let your AI assistant write this section. If it's empty, jury will ask wh
   2. System does ___
   3. User sees/gets ___
 -->
+
+**Read Colab** is a web-based smart office library platform that centralizes book discovery, lending, and peer-to-peer sharing with AI-powered recommendations. Employees can browse the office library catalogue, request and track book borrowings with automatic due-date notifications, reserve unavailable books, and share their personal book collections with colleagues. The platform replaces manual tracking with real-time status updates, reduces friction in the lending process, and creates a knowledge-sharing culture by making personal books discoverable.
+
+**Core User Flow:**
+
+1. **Employee (Discoverer)** opens the app and searches for books on a topic using title, author, or category filters
+2. **System** queries the library catalogue and displays matching books with availability, ratings from other employees, and cover images  
+3. **Employee** finds an available book and clicks "Request Borrow" → system creates a borrow request and notifies the approver
+4. **System** sends a notification to admin/owner; they approve via one click
+5. **Employee** sees borrow approved; system shows due date and tracks it with a cron job
+6. **Employee** reads the book and returns it; system marks it returned and sends a return confirmation
+7. **Bonus (Personal Sharing):** Employee can also list their own books in a "Personal Library" for colleagues to request via the same approval/tracking workflow
+
+**Alternative flow for personal books:**
+- Employee A lists a personal book on their "My Shared Books" page
+- Employee B discovers it under "Browse Personal Books" and requests it
+- Employee A approves; system transitions the book to "BORROWED" status
+- Employee B returns it; system updates status and closes the request
 
 ## 3. Functional Scope: Built vs. Not Built  [AI-FILL — verified from code]
 
@@ -92,7 +152,18 @@ Browser (React SPA)
 ```
 
 **Hardest technical problem solved** [HUMAN-FILL — team should elaborate]
-*Candidate from code complexity: the pluggable multi-provider AI service with a consistent interface (`backend/src/ai/interface/ai.interface.ts`) and the full peer-to-peer personal-book lending lifecycle with settings, notifications, and status transitions.*
+
+**1. Pluggable Multi-Provider AI Service** (`backend/src/ai/interface/ai.interface.ts`, `backend/src/ai/providers/`)  
+The team built a vendor-agnostic AI abstraction layer that allows seamless switching between 5 different AI providers (GitHub Models, OpenAI, Gemini, Claude, Ollama) at runtime via environment configuration. Each provider has different API signatures and rate limits; the unified interface masks these differences so recommendations work consistently. When GitHub Models hits its 50-request/day free limit, the app gracefully falls back to a templated response rather than crashing.
+
+**2. Complex Peer-to-Peer Personal Book Lending State Machine** (`backend/src/personalBooks/service.ts`, `frontend/src/pages/Personal*`)  
+Managing the lifecycle of a personal book borrow request across two independent users (requester + owner) with overlapping concerns proved complex:
+- **State transitions:** PENDING → APPROVED/REJECTED → BORROWED → RETURNED (requester's view) vs. owner approving with optional auto-approval logic
+- **Bidirectional notifications:** Both requester and owner need updates at different stages  
+- **Settings persistence:** Each user's lending rules (auto-approve, max concurrent loans, default duration) must apply consistently across all their requests without hardcoding
+- **Concurrency:** Two users could reject/approve the same request simultaneously; proper database locking prevents race conditions
+
+The solution uses Prisma's atomic transactions, a state-machine pattern with explicit enum transitions, and subscriber callbacks for notification triggers.
 
 ---
 
@@ -128,7 +199,8 @@ npm run dev                   # starts on http://localhost:5173 (escalates if po
 - `AI_PROVIDER` + API key (e.g. `GITHUB_TOKEN`) — required only for AI recommendations. App works fully without it; recommendations will return a fallback response.
 - No other hosted services required.
 
-**Demo link / recording** [HUMAN-FILL]
+**Demo link / recording** [HUMAN-FILL]  
+*To be provided by the team — video demonstrating user registration → library search → borrow request → approval workflow → return.*
 
 ---
 
